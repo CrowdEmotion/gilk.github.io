@@ -6,7 +6,7 @@
 	$(document).ready(function () {
 		
 		ceclient.init(true, true);
-        $('#container').html('<div id="form_login">'+
+        $('#container').html('<div id="form_login" class="content">'+
 		'<input id="username" class="loginFields" placeholder="username"   type="text"  class="inline">'+
 		'<input id="password" class="loginFields" placeholder="password"  type="password"   class="inline">'+
 		'<input id="submit" type="button"  class="inline" value="Login" ></div>');
