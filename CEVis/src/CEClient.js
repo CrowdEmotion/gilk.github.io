@@ -256,7 +256,12 @@ javaRest.httpGet = function (theUrl){
 
     try{
         xmlHttp = new XMLHttpRequest();
-        xmlHttp.open( "GET", theUrl, false );
+        xhttp.onreadystatechange = function() {
+            if (xhttp.readyState == 4 && xhttp.status == 200) {
+                return (xmlHttp.statusText=='OK') ? true : false;
+            }else return false;
+        };
+        xmlHttp.open( "GET", theUrl, true );
         xmlHttp.send( null );
         return (xmlHttp.statusText=='OK') ? true : false;
     }catch(e){
