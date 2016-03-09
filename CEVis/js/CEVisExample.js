@@ -96,36 +96,40 @@
 			var metricIds = $('input:checkbox:checked.metricCheck').map(function () {
 				return this.value;
 			}).get();
+            var videoId = null
             if(videoData && videoData.remoteLocation){
-                $('#video_wrapper').html(' <button onclick="playPause()">Play/Pause</button>'+
-                    '<button onclick="makeBig()">Big</button>'+
-                    '<button onclick="makeSmall()">Small</button>'+
-                    '<button onclick="makeNormal()">Normal</button>'+
-                    '<br><br>'+
-                    '<video id="video1" width="420">'+
+                $('#video_wrapper').html(' <button id="playpause" >Play/Pause</button>'+
+                    '<video id="facevideo" width="420">'+
                     '<source src="'+videoData.remoteLocation+'" type="video/mp4">'+
                     'Your browser does not support HTML5 video.'+
                     '</video>');
+                $('#playpause').on('click',playPause);
+                videoId = 'facevideo';
             }
 			d3.select("#graph").html("");
             d3.select('#resEmo_0 svg').html("");
-			showGraph(apiData,"line",metricIds,"graph");
+			showGraph(apiData,"line",metricIds,"graph",false,videoId);
 			$('#form_graph').slideDown('slow');
 			window.addEventListener('resize', function () {
 				d3.select("#graph").html("");
 				console.log(parseInt(d3.select("#graph").style("width").substring(0,d3.select("#graph").style("width").length-2)));
-			    showGraph(apiData,"line",metricIds,"graph");
+			    showGraph(apiData,"line",metricIds,"graph",false,videoId);
 		//		console.log(parseInt(d3.select("#graph").style("width").substring(0,d3.select("#graph").style("width").length-2)));
 			});
 		};
 
 
         function playPause() {
-            var myVideo = document.getElementById("video1");
-            if (myVideo.paused)
+            var myVideo = document.getElementById("facevideo");
+            if (myVideo.paused){
                 myVideo.play();
-            else
+
+            }
+            else {
                 myVideo.pause();
+            }
+            graphMoveBarByVideo('facevideo');
+
         }
 
     });

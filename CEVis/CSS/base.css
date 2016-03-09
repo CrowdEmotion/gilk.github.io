@@ -349,3 +349,16 @@ legend span {
 .add-bottom { margin-bottom: 20px !important; }
 
 
+#playpause{
+    float: right;
+}
+
+.rule {
+    height: 90%;
+    position: absolute;
+    border-right: 1px dotted #000;
+    text-align: right;
+}
+.rule span {
+    margin-right: 0.5em;
+}

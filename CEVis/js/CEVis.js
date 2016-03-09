@@ -1,8 +1,11 @@
-// d3.legend.js 
+// d3.legend.js
 // (C) 2012 ziggy.jonsson.nyc@gmail.com
 // MIT licence
 //Modified by Gil Kogan (gil@crowdemotion.co.uk)
+
+var ceGraphTS = {gid:0,graphRuler:null, videoId: null, time:0, width:0};
 var gid = 0;
+
 var d3Legend= function(gid) {
     d3.legend = function(g) {
         g.each(function() {
@@ -82,11 +85,68 @@ var d3Legend= function(gid) {
         })
         return g
     }
-}
+};
 
-////////////////
-//Authored by gil@crowdemotion.co.uk
-/////////////
+
+var d3VRulerDraw= function(){
+    var xpos = d3.event.pageX;
+    ceGraphTS.graphRuler = d3.select('#form_graph').selectAll('div.rule')
+        .data([0]);
+    ceGraphTS.graphRuler.enter().append('div')
+        .attr('class', 'rule')
+        .append('span');
+    ceGraphTS.graphRuler.style('left', xpos + 'px');
+    //ceGraphTS.graphRuler.select('span').text(xpos);
+
+};
+
+var d3VRuler = function(graphID, videoTag){
+    d3.select('#graph svg').on('SVGLoad', function() {
+        d3VRulerDraw();
+    });
+    d3.select('#graph').on('mousemove', function() {
+        d3VRulerDraw();
+        if(handleBar){
+            clearInterval(handleBar);
+        }
+    });
+    /*
+    d3.select('#graph').on('click', function() {
+        graphMoveVideoByBar();
+    });
+    */
+};
+
+var graphMoveVideoByBar = function(videoId){
+    //WIP
+    if(videoId) ceGraphTS.videoId =  videoId;
+    var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
+    var vid =  document.getElementById(ceGraphTS.videoId);
+    var xpos = d3.event.pageX;
+    var left = ceGraphTS.graphRuler.style('left');
+    vid.currentStyle = xpos/pixelXSeconds;
+    if(handleBar){
+        clearInterval(handleBar);
+    }else{
+
+    }
+    graphMoveBarByVideo();
+};
+
+var graphMoveBarByVideo = function(videoId){
+    if(videoId) ceGraphTS.videoId =  videoId;
+    ceGraphTS.width =  $('#graph').width();;
+    var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
+    var vid =  document.getElementById(ceGraphTS.videoId);
+    var handleBar = setInterval(function(){
+        if(vid.currentTime>0) {
+            ceGraphTS.graphRuler.style('left', (vid.currentTime * pixelXSeconds) + 'px');
+            ceGraphTS.graphRuler.select('span').text(parseInt(vid.currentTime)+'s');
+        }
+    },250);
+};
+
+
 
 function normalise(arr){
     minVal = d3.min(arr)
@@ -103,17 +163,18 @@ function normalise(arr){
 }
 
 
-function showGraph(dataFull, graphType, initState, divId, emotionsOnly) {
+function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId) {
     gid = divId.split('_');
     gid = (gid[1])?  gid[1] : 0;
+    videoId = videoId ? document.getElementById(videoId) : false;
     d3Legend(gid);
     var positiveMood = [];
     var negativeMood = [];
     var engagement = [];
     if(emotionsOnly==undefined) emotionsOnly= false;
     if(!dataFull || !dataFull[0] || !dataFull[0].data) return false;
+    ceGraphTS.time = dataFull[0].data[dataFull[0].data.length-1];
     for( var i = 0; i < dataFull[0].data.length; i++){
-
         if(dataFull[1].data[i]==null || emotionsOnly==true){
             positiveMood.push(null);
             negativeMood.push(null);
@@ -156,14 +217,11 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly) {
         var init_H = 300;// parseInt(d3.select('#'+divId).style("height").substring(0,d3.select('#'+divId).style("width").length-2)) || 500;
         init_H = init_H>250 ? init_H : 250;
 
-
-//		var m = [20, 150, 100, 20];
+        var m = [20, 150, 100, 20];
 //		var m2 =[430, 150, 20, 20]; // margins
 
         var m = [init_H*(20.0/500.0), 150, init_H*(100.0/500.0), 20];
         var m2 =[init_H*(430.0/500.0), 150, init_H*(20.0/500.0), 20]; // margins
-
-
 
         // var w = d3.select('#'+divId).style("width") - m[1] - m[3]; // width
         //	var w = 1200 - m[1] - m[3];
@@ -366,7 +424,9 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly) {
             .call(d3.legend)
             .on("click",adjustYDomain);
 
-
+        if(videoId){
+            d3VRuler(divId, videoId);
+        }
     }
     for (var pos = 1; pos <= dataFull.length-1; pos++){
         if(initState.indexOf(pos+2+"") == -1){
@@ -378,7 +438,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly) {
 //	var el = d3.select('#'+divId);
 //
 //	function setSize(child, parent) {
-//	    child && parent && 
+//	    child && parent &&
 //	    child.attr('width', parent.clientWidth)
 //	         .attr('height', parent.clientHeight);
 //	}
@@ -386,5 +446,6 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly) {
 
 
 }
+
 
 
