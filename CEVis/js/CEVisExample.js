@@ -48,7 +48,6 @@
 						$('#form_graph').slideDown('slow');
 						});
 						$('#container').on( 'click', '#submitRequestId', function () {
-							//plot the graph
 							ceclient.readTimeseries($('#responseId').val(),[1,3,4,5,6,7,8],drawGraph,true);
 						});
 						$('#container').on( 'click', '#submitLogout', function () {
@@ -73,6 +72,7 @@
 			var metricIds = $('input:checkbox:checked.metricCheck').map(function () {
 				return this.value;
 			}).get();
+			d3.select("#graph").html("");
 			showGraph(apiData,"line",metricIds,"graph");
 			$('#form_graph').slideDown('slow');
 			window.addEventListener('resize', function () {
