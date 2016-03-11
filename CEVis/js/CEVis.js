@@ -3,7 +3,7 @@
 // MIT licence
 //Modified by Gil Kogan (gil@crowdemotion.co.uk)
 
-var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, divId:null,time:0, width:0, handleBar:null, events: {focus_ready:null}};
+var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, divId:null,time:0, width:0,height:0, handleBar:null, events: {focus_ready:null}};
 ceGraphTS.events.focus_ready = new Event('cegraphts_focus_ready');
 var gid = 0;
 
@@ -134,15 +134,19 @@ var d3VRulerDraw= function(){
         .attr('class', 'rule')
         .append('span');
     ceGraphTS.graphRuler.style('left', xpos + 'px');
+    ceGraphTS.graphRuler.style('height', ceGraphTS.height + 'px');
+    ceGraphTS.graphRuler.attr('height', ceGraphTS.height + 'px');
     //ceGraphTS.graphRuler.select('span').text(xpos);
 };
 
 var d3VRuler = function(graphID, videoTag){
     //TODO SVGLoad event  not working
+    /*
     d3.select('#'+graphID+' svg').on('SVGLoad', function() {
         d3VRulerDraw();
     });
-    d3.select('#'+graphID+' svg').on('mousemove', function() {
+    */
+    d3.select('#'+graphID+'').on('mousemove', function() {
         d3VRulerDraw();
         graphMoveBarByVideo(ceGraphTS.videoId, 'pause');
     });
@@ -192,7 +196,6 @@ var moveBar = function(){
     ceGraphTS.handleBar = setInterval(function(){
         if(vid.currentTime>0) {
             ceGraphTS.graphRuler.style('left', (vid.currentTime * pixelXSeconds) + 'px');
-            //ceGraphTS.graphRuler.select('span').text((parseInt(vid.currentTime))+'s');
             $('#timing').html((parseInt(vid.currentTime))+'s');
         };
     },250);
@@ -229,9 +232,11 @@ function normalise(arr){
 }
 
 
-var saveWidth = function(){
-    if(ceGraphTS.width<=0)
-        ceGraphTS.width =  d3.select("#"+ceGraphTS.divId+" svg g.focus").node().getBoundingClientRect().width;
+var saveDim = function(){
+    if(ceGraphTS.width<=0) {
+        ceGraphTS.width = d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().width;
+        ceGraphTS.height = d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().height;
+    }
 };
 
 function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId, engine) {
@@ -239,7 +244,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
     gid = divId.split('_');
     ceGraphTS.gid = gid = (gid[1])?  gid[1] : 0;
     ceGraphTS.divId = divId;
-    document.getElementById(ceGraphTS.divId).addEventListener('cegraphts_focus_ready', saveWidth, false);
+    document.getElementById(ceGraphTS.divId).addEventListener('cegraphts_focus_ready', saveDim, false);
     videoId = videoId ? document.getElementById(videoId) : false;
     d3Legend();
     var positiveMood = [];
@@ -519,6 +524,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
             .style("font-size","16px")
             .call(d3.legend)
             .on("click",adjustYDomain);
+
 
         if(videoId){
             d3VRuler(divId, videoId);
