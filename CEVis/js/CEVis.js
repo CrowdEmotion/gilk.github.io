@@ -3,114 +3,150 @@
 // MIT licence
 //Modified by Gil Kogan (gil@crowdemotion.co.uk)
 
-var ceGraphTS = {gid:0,graphRuler:null, videoId: null, time:0, width:0};
+var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, divId:null,time:0, width:0, handleBar:null, events: {focus_ready:null}};
+ceGraphTS.events.focus_ready = new Event('cegraphts_focus_ready');
 var gid = 0;
 
-var d3Legend= function(gid) {
-    d3.legend = function(g) {
-        g.each(function() {
-            var g= d3.select(this),
+
+var d3Legend =function() {
+
+    d3.legend = function (g) {
+        var gid = ceGraphTS.gid;
+        g.each(function () {
+            var g = d3.select(this),
                 items = {},
-                svg = d3.select("#resEmo_"+gid+' svg'),
+                svg = d3.select("#" + ceGraphTS.divId + ' svg'),
                 legendPadding = 0,
                 lb = g.selectAll(".legend-box").data([true]),
                 li = g.selectAll(".legend-items").data([true])
 
-            lb.enter().append("rect").classed("legend-box",true)
-            li.enter().append("g").classed("legend-items",true)
+            lb.enter().append("rect").classed("legend-box", true)
+            li.enter().append("g").classed("legend-items", true)
 
-            svg.selectAll("[data-legend]").each(function() {
+            svg.selectAll("[data-legend]").each(function () {
                 var self = d3.select(this);
                 items[self.attr("data-legend")] = {
-                    pos : self.attr("data-legend-pos") || this.getBBox().y,
-                    color : self.attr("data-legend-color") != undefined ? self.attr("data-legend-color") : self.style("fill") != 'none' ? self.style("fill") : self.style("stroke")
+                    pos: self.attr("data-legend-pos") || this.getBBox().y,
+                    color: self.attr("data-legend-color") != undefined ? self.attr("data-legend-color") : self.style("fill") != 'none' ? self.style("fill") : self.style("stroke")
                 }
             });
 
-            items = d3.entries(items).sort(function(a,b) { return a.value.pos-b.value.pos})
+            items = d3.entries(items).sort(function (a, b) {
+                return a.value.pos - b.value.pos
+            })
 
-            function legendClick(d){
-                if(d3.select("."+d.key+"line.gidline_"+gid).attr("visibility")=="visible"){
-                    d3.selectAll("."+d.key+"line.gidline_"+gid).attr("visibility","hidden");
-                    d3.selectAll(".legend"+d.key+".gidlegend_"+gid ).style("fill","grey");
+            function legendClick(d) {
+                if (d3.select("." + d.key + "line.gidline_" + gid).attr("visibility") == "visible") {
+                    d3.selectAll("." + d.key + "line.gidline_" + gid).attr("visibility", "hidden");
+                    d3.selectAll(".legend" + d.key + ".gidlegend_" + gid).style("fill", "grey");
                 }
-                else if(d3.select("."+d.key+"line.gidline_"+gid).attr("visibility")=="hidden"){
-                    d3.selectAll("."+d.key+"line.gidline_"+gid).attr("visibility","visible");
-                    d3.selectAll(".legend"+d.key+".gidlegend_"+gid).style("fill",d.value.color);
+                else if (d3.select("." + d.key + "line.gidline_" + gid).attr("visibility") == "hidden") {
+                    d3.selectAll("." + d.key + "line.gidline_" + gid).attr("visibility", "visible");
+                    d3.selectAll(".legend" + d.key + ".gidlegend_" + gid).style("fill", d.value.color);
                 }
             }
 
-            function legendMouseover(d){
-                d3.select("."+d.key+"line.gidline_"+gid).style("stroke-width",5);
-                d3.select("."+d.key+"line.gidline_"+gid)[0][0].parentNode.appendChild(d3.select("."+d.key+"line.gidline_"+gid)[0][0]);
+            function legendMouseover(d) {
+                d3.select("." + d.key + "line.gidline_" + gid).style("stroke-width", 5);
+                d3.select("." + d.key + "line.gidline_" + gid)[0][0].parentNode.appendChild(d3.select("." + d.key + "line.gidline_" + gid)[0][0]);
             }
 
-            function legendMouseout(d){
-                d3.select("."+d.key+"line.gidline_"+gid).style("stroke-width",1.5);
+            function legendMouseout(d) {
+                d3.select("." + d.key + "line.gidline_" + gid).style("stroke-width", 1.5);
             }
 
             li.selectAll("text")
-                .data(items,function(d) { return d.key})
-                .call(function(d) { d.enter().append("text")})
-                .call(function(d) { d.exit().remove()})
-                .attr("y",function(d,i) { return i+"em"})
-                .attr("x","1em")
-                .attr("class",function(d){return "legend"+d.key+" gidlegendtext_"+gid})
-                .attr("id",function(d){return "legend"+d.key+"text"})
-                .attr("data-i18n",function(d){return "emo."+d.key.toLowerCase()})
-                .text(function(d) { ;return d.key})
-                .style("fill",function(d) {return d.value.color})
-                .on("click",legendClick)
-                .on("mouseover",legendMouseover)
+                .data(items, function (d) {
+                    return d.key
+                })
+                .call(function (d) {
+                    d.enter().append("text")
+                })
+                .call(function (d) {
+                    d.exit().remove()
+                })
+                .attr("y", function (d, i) {
+                    return i + "em"
+                })
+                .attr("x", "1em")
+                .attr("class", function (d) {
+                    return "legend" + d.key + " gidlegendtext_" + gid
+                })
+                .attr("id", function (d) {
+                    return "legend" + d.key + "text"
+                })
+                .attr("data-i18n", function (d) {
+                    return "emo." + d.key.toLowerCase()
+                })
+                .text(function (d) {
+                    ;
+                    return d.key
+                })
+                .style("fill", function (d) {
+                    return d.value.color
+                })
+                .on("click", legendClick)
+                .on("mouseover", legendMouseover)
                 .on("mouseout", legendMouseout)
 
             li.selectAll("circle")
-                .data(items,function(d) { return d.key})
-                .call(function(d) { d.enter().append("circle")})
-                .call(function(d) { d.exit().remove()})
-                .attr("cy",function(d,i) { return i-0.25+"em"})
-                .attr("cx",0)
-                .attr("r","0.4em")
-                .style("fill",function(d) {return d.value.color})
-                .attr("class",function(d){return "legend"+d.key+" "+"gidlegend_"+gid})
-                .on("click",legendClick)
-                .on("mouseover",legendMouseover)
+                .data(items, function (d) {
+                    return d.key
+                })
+                .call(function (d) {
+                    d.enter().append("circle")
+                })
+                .call(function (d) {
+                    d.exit().remove()
+                })
+                .attr("cy", function (d, i) {
+                    return i - 0.25 + "em"
+                })
+                .attr("cx", 0)
+                .attr("r", "0.4em")
+                .style("fill", function (d) {
+                    return d.value.color
+                })
+                .attr("class", function (d) {
+                    return "legend" + d.key + " " + "gidlegend_" + gid
+                })
+                .on("click", legendClick)
+                .on("mouseover", legendMouseover)
                 .on("mouseout", legendMouseout)
 
             var lbbox = li[0][0].getBBox()
-            lb.attr("x",(lbbox.x-legendPadding))
-                .attr("y",(lbbox.y-legendPadding))
-                .attr("height",(lbbox.height+2*legendPadding))
-                .attr("width",(lbbox.width+2*legendPadding))
+            lb.attr("x", (lbbox.x - legendPadding))
+                .attr("y", (lbbox.y - legendPadding))
+                .attr("height", (lbbox.height + 2 * legendPadding))
+                .attr("width", (lbbox.width + 2 * legendPadding))
         })
         return g
-    }
+    };
 };
-
-
+var isNumeric = function(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n) && n!=null && n!=undefined && n!=NaN ;
+};
 var d3VRulerDraw= function(){
     var xpos = d3.event.pageX;
-    ceGraphTS.graphRuler = d3.select('#form_graph').selectAll('div.rule')
+    ceGraphTS.graphRuler = d3.select('#'+ceGraphTS.divId).selectAll('div.rule')
         .data([0]);
-    ceGraphTS.graphRuler.enter().append('div')
+    ceGraphTS.graphRuler.enter().insert('div',":first-child")
         .attr('class', 'rule')
         .append('span');
     ceGraphTS.graphRuler.style('left', xpos + 'px');
     //ceGraphTS.graphRuler.select('span').text(xpos);
-
 };
 
 var d3VRuler = function(graphID, videoTag){
-    d3.select('#graph svg').on('SVGLoad', function() {
+    //TODO SVGLoad event  not working
+    d3.select('#'+graphID+' svg').on('SVGLoad', function() {
         d3VRulerDraw();
     });
-    d3.select('#graph').on('mousemove', function() {
+    d3.select('#'+graphID+' svg').on('mousemove', function() {
         d3VRulerDraw();
-        if(handleBar){
-            clearInterval(handleBar);
-        }
+        graphMoveBarByVideo(ceGraphTS.videoId, 'pause');
     });
-    /*
+    /* TODO
     d3.select('#graph').on('click', function() {
         graphMoveVideoByBar();
     });
@@ -133,19 +169,49 @@ var graphMoveVideoByBar = function(videoId){
     graphMoveBarByVideo();
 };
 
-var graphMoveBarByVideo = function(videoId){
+var graphMoveBarByVideo = function(videoId,action){
     if(videoId) ceGraphTS.videoId =  videoId;
-    ceGraphTS.width =  $('#graph').width();;
+    var handleFocus = null;
+    if(action == 'pause' ||  action == 'stop' ){
+        if(handleFocus) clearInterval(handleFocus);
+    }else{
+        handleFocus = setInterval(function(){
+            if(ceGraphTS.width){
+                moveBar()
+                clearInterval(handleFocus);
+            }
+        },250);
+    }
+
+
+
+};
+var moveBar = function(){
     var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
     var vid =  document.getElementById(ceGraphTS.videoId);
-    var handleBar = setInterval(function(){
+    ceGraphTS.handleBar = setInterval(function(){
         if(vid.currentTime>0) {
             ceGraphTS.graphRuler.style('left', (vid.currentTime * pixelXSeconds) + 'px');
-            ceGraphTS.graphRuler.select('span').text(parseInt(vid.currentTime)+'s');
-        }
+            //ceGraphTS.graphRuler.select('span').text((parseInt(vid.currentTime))+'s');
+            $('#timing').html((parseInt(vid.currentTime))+'s');
+        };
     },250);
 };
 
+var getMetricName = function(name,type){
+    if(type=='kanako') {
+        return name.charAt(0).toUpperCase() + name.slice(1);
+    }else{
+        return (name.charAt(0).toUpperCase()+name.slice(1) ).substring(0, name.length - 6 );
+    }
+};
+var clearNumber = function(n){
+    return n;
+    /*var n = new String(n);
+    n = n.replace(/[^\d.-]/g, '');
+    return parseFloat(n,5);
+    */
+}
 
 
 function normalise(arr){
@@ -163,17 +229,26 @@ function normalise(arr){
 }
 
 
-function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId) {
+var saveWidth = function(){
+    if(ceGraphTS.width<=0)
+        ceGraphTS.width =  d3.select("#"+ceGraphTS.divId+" svg g.focus").node().getBoundingClientRect().width;
+};
+
+function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId, engine) {
+    engine ? ceGraphTS.engine =   engine : ceGraphTS.engine = 'kanako';
     gid = divId.split('_');
-    gid = (gid[1])?  gid[1] : 0;
+    ceGraphTS.gid = gid = (gid[1])?  gid[1] : 0;
+    ceGraphTS.divId = divId;
+    document.getElementById(ceGraphTS.divId).addEventListener('cegraphts_focus_ready', saveWidth, false);
     videoId = videoId ? document.getElementById(videoId) : false;
-    d3Legend(gid);
+    d3Legend();
     var positiveMood = [];
     var negativeMood = [];
     var engagement = [];
     if(emotionsOnly==undefined) emotionsOnly= false;
     if(!dataFull || !dataFull[0] || !dataFull[0].data) return false;
     ceGraphTS.time = dataFull[0].data[dataFull[0].data.length-1];
+    ceGraphTS.timeLength = dataFull[0].data.length;
     for( var i = 0; i < dataFull[0].data.length; i++){
         if(dataFull[1].data[i]==null || emotionsOnly==true){
             positiveMood.push(null);
@@ -194,23 +269,33 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId)
     negativeMood=normalise(negativeMood);
     engagement=normalise(engagement);
 
+    //TODO engagement
+    /*
     dataFull = [
-        {"name": ( dataFull[0].metricName.charAt(0).toUpperCase()+dataFull[0].metricName.slice(1) ).substring(0, dataFull[0].metricName.length - 6 ) ,"data":dataFull[0].data},
-        {"name": ( dataFull[1].metricName.charAt(0).toUpperCase()+dataFull[1].metricName.slice(1) ).substring(0, dataFull[1].metricName.length - 6 ) ,"data":dataFull[1].data},
-        {"name": ( dataFull[2].metricName.charAt(0).toUpperCase()+dataFull[2].metricName.slice(1) ).substring(0, dataFull[2].metricName.length - 6 ) ,"data":dataFull[2].data},
-        {"name": ( dataFull[3].metricName.charAt(0).toUpperCase()+dataFull[3].metricName.slice(1) ).substring(0, dataFull[3].metricName.length - 6 ) ,"data":dataFull[3].data},
-        {"name": ( dataFull[4].metricName.charAt(0).toUpperCase()+dataFull[4].metricName.slice(1) ).substring(0, dataFull[4].metricName.length - 6 ) ,"data":dataFull[4].data},
-        //{"name":dataFull[5].metricName.charAt(0).toUpperCase()+dataFull[5].metricName.slice(1),"data":dataFull[5].data},
-        //{"name":dataFull[6].metricName.charAt(0).toUpperCase()+dataFull[6].metricName.slice(1),"data":dataFull[6].data},
+        {"name": ( dataFull[0].metricName.charAt(0).toUpperCase()+dataFull[0].metricName.slice(1) ) ,"data":dataFull[0].data},
+        {"name": ( dataFull[1].metricName.charAt(0).toUpperCase()+dataFull[1].metricName.slice(1) ) ,"data":dataFull[1].data},
+        {"name": ( dataFull[2].metricName.charAt(0).toUpperCase()+dataFull[2].metricName.slice(1) ) ,"data":dataFull[2].data},
+        {"name": ( dataFull[3].metricName.charAt(0).toUpperCase()+dataFull[3].metricName.slice(1) ) ,"data":dataFull[3].data},
+        {"name": ( dataFull[4].metricName.charAt(0).toUpperCase()+dataFull[4].metricName.slice(1) ) ,"data":dataFull[4].data},
+        {"name": ( dataFull[5].metricName.charAt(0).toUpperCase()+dataFull[5].metricName.slice(1) ) ,"data":dataFull[5].data},
+        {"name": ( dataFull[6].metricName.charAt(0).toUpperCase()+dataFull[6].metricName.slice(1) ) ,"data":dataFull[6].data},
         //{"name":"PositiveMood","data":positiveMood},
         //{"name":"NegativeMood","data":negativeMood},
         //{"name":"Engagement","data":engagement}
     ];
+    */
+    var reformattedArray = dataFull.map(function(obj){
+        var rObj = {};
+        obj.data.length>ceGraphTS.timeLength?  obj.data.splice(-(obj.data.length-ceGraphTS.timeLength)):'';
+        rObj["name"] = getMetricName(obj.metricName,ceGraphTS.engine);
+        rObj["data"] = obj.data;
+        return rObj;
+    });
 
-    var dataCollect = function(data){
-        return {"name":data.metricName.charAt(0).toUpperCase()+data.metricName.slice(1),"data":data.data}
-    };
-
+    if(reformattedArray.length>ceGraphTS.timeLength){
+        reformattedArray.splice(- (reformattedArray.length-ceGraphTS.timeLength));
+    }
+    dataFull = reformattedArray;
 
     if (graphType == "line") {
 
@@ -240,7 +325,8 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId)
         var data = dataFull[1].data;
 
         function timetrans(timestamp){
-            return timestamp / 1000.0;
+            var r  =clearNumber(timestamp / 1000.0);
+            return r;
         }
 
         var ymina = [];
@@ -298,22 +384,22 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId)
 
 
         var line = d3.svg.line()
-            .defined(function(d) { return d!=null; }) //To remove null entries (will look like gaps in the line)
+            .defined(function(d) { return isNumeric(clearNumber(d)); }) //To remove null entries (will look like gaps in the line)
             //.interpolate('cardinal')
             .x(function (d, i) {
-                return x(timetrans(dataFull[0].data[i]));
+                return clearNumber(x(timetrans(dataFull[0].data[i])));
             })
             .y(function (d) {
-                return y(d);
+                return clearNumber(y(d));
             });
 
         var line2 = d3.svg.line()
-            .defined(function(d) { return d!=null; }) //To remove null entries (will look like gaps in the line)
+            .defined(function(d) { return isNumeric(clearNumber(d)); }) //To remove null entries (will look like gaps in the line)
             .x(function (d, i) {
-                return x2(timetrans(dataFull[0].data[i]));
+                return clearNumber(x2(timetrans(dataFull[0].data[i])));
             })
             .y(function (d) {
-                return y2(d);
+                return clearNumber(y2(d));
             });
 
         d3.select("#"+divId+" svg").remove();
@@ -331,6 +417,9 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId)
         var graph =	svgContainer.append("svg:g")
             .attr("class","focus")
             .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+
+        //ceGraphTS.width = d3.select("#"+ceGraphTS.divId+" svg g.focus").node().getBoundingClientRect().width;
+
 
         var viewer = svgContainer.append("g")
             .attr("class","context")
@@ -387,27 +476,32 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId)
         }
 
         for (var pos = 1; pos <= dataFull.length-1; pos++) {
-            graph.append("svg:path").attr("id", "path"+pos)
-                .attr("d", line(dataFull[pos].data))
-                .attr("data-legend",dataFull[pos].name)
-                .attr("data-legend-pos",pos)
-                .attr("stroke",colorMap(dataFull[pos].name))
-                .attr("stroke-width",1.5)
-                .attr("fill","none")
-                .attr("visibility","visible")
-                .attr("class", dataFull[pos].name+"line gidline_"+gid)
-                .on("mouseover", lineMouseover)
-                .on("mouseout", lineMouseout)
-                .attr("clip-path","url(#clip)");
+            var datad = dataFull[pos].data;
+            var datan = dataFull[pos].name;
+            try {
+                graph.append("svg:path").attr("id", "path" + pos)
+                    .attr("d", line(datad))
+                    .attr("data-legend", datan)
+                    .attr("data-legend-pos", pos)
+                    .attr("stroke", colorMap(datan))
+                    .attr("stroke-width", 1.5)
+                    .attr("fill", "none")
+                    .attr("visibility", "visible")
+                    .attr("class", datan + "line gidline_" + gid)
+                    .on("mouseover", lineMouseover)
+                    .on("mouseout", lineMouseout)
+                    .attr("clip-path", "url(#clip)");
 
-            viewer.append("svg:path").attr("id","vPath"+pos)
-                .attr("d", line2(dataFull[pos].data))
-                .attr("stroke",colorMap(dataFull[pos].name))
-                .attr("stroke-width",1.5)
-                .attr("fill","none")
-                .attr("visibility","visible")
-                .attr("class", dataFull[pos].name+"line gidline_"+gid)
+                viewer.append("svg:path").attr("id", "vPath" + pos)
+                    .attr("d", line2(datad))
+                    .attr("stroke", colorMap(datan))
+                    .attr("stroke-width", 1.5)
+                    .attr("fill", "none")
+                    .attr("visibility", "visible")
+                    .attr("class", datan + "line gidline_" + gid)
+            }catch(e){
 
+            }
         }
 
         viewer.append("g")
@@ -416,6 +510,8 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId)
             .selectAll("rect")
             .attr("y", -6)
             .attr("height", h2 + 7);
+
+        document.getElementById(ceGraphTS.divId).dispatchEvent(ceGraphTS.events.focus_ready);
 
         var legend = graph.append("g")
             .attr("class","legend")

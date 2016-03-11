@@ -5,9 +5,11 @@
     var kanakoMetrics = [1,3,4,5,6,7,8];
     var suwakoMetrics = [23,25,26,27,28,29,30];
     var videoData = null;
+    var graphID = 'graph_0';
 	
 	$(document).ready(function () {
-		
+
+
 		ceclient.init(true, true);
         $('#container').html('<div id="form_login" class="content">'+
 		'<input id="username" class="loginFields" placeholder="username"   type="text"  class="inline">'+
@@ -43,14 +45,14 @@
 							'<input id="submitRequestId" type="button"  class="inline"  value="Send Request" >'+
                             '<select id="engine" type="select"  class="inline">' +
                             '<option value="kanako" selected >Kanako</option><option value="suwako">Suwako</option></select></div>'+
-							'<div id="graph"></div></div>');
+							'<div id="'+graphID+'"></div></div>');
 							$('#responseId').keypress(function (e) {
 								if (e.which==13){
 									$('#submitRequestId').click();
 								}
 							})
 
-						$('#form_graph').slideDown('slow');
+						    $('#'+graphID).slideDown('slow');
 						});
 						$('#container').on( 'click', '#submitRequestId', function () {
                             var respID = $('#responseId').val();
@@ -92,13 +94,15 @@
         };
 
 		var drawGraph = function (apiData) {
-			$('#form_graph').slideUp('slow');
+			$('#'+graphID).slideUp('slow');
 			var metricIds = $('input:checkbox:checked.metricCheck').map(function () {
 				return this.value;
 			}).get();
             var videoId = null
             if(videoData && videoData.remoteLocation){
-                $('#video_wrapper').html(' <button id="playpause" >Play/Pause</button>'+
+                $('#video_wrapper').html(' ' +
+                    '<div id="timing"></div>'+
+                    '<button id="playpause" >Play/Pause</button>'+
                     '<video id="facevideo" width="420">'+
                     '<source src="'+videoData.remoteLocation+'" type="video/mp4">'+
                     'Your browser does not support HTML5 video.'+
@@ -108,12 +112,12 @@
             }
 			d3.select("#graph").html("");
             d3.select('#resEmo_0 svg').html("");
-			showGraph(apiData,"line",metricIds,"graph",false,videoId);
-			$('#form_graph').slideDown('slow');
+			showGraph(apiData,"line",metricIds,graphID,true,videoId);
+			$('#'+graphID).slideDown('slow');
 			window.addEventListener('resize', function () {
-				d3.select("#graph").html("");
-				console.log(parseInt(d3.select("#graph").style("width").substring(0,d3.select("#graph").style("width").length-2)));
-			    showGraph(apiData,"line",metricIds,"graph",false,videoId);
+				d3.select("#"+graphID).html("");
+				console.log(parseInt(d3.select("#"+graphID).style("width").substring(0,d3.select("#"+graphID).style("width").length-2)));
+			    showGraph(apiData,"line",metricIds,graphID,true,videoId);
 		//		console.log(parseInt(d3.select("#graph").style("width").substring(0,d3.select("#graph").style("width").length-2)));
 			});
 		};
@@ -123,12 +127,13 @@
             var myVideo = document.getElementById("facevideo");
             if (myVideo.paused){
                 myVideo.play();
-
+                graphMoveBarByVideo('facevideo');
             }
             else {
                 myVideo.pause();
+                graphMoveBarByVideo('facevideo','pause');
             }
-            graphMoveBarByVideo('facevideo');
+
 
         }
 

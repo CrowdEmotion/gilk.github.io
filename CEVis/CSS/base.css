@@ -351,6 +351,7 @@ legend span {
 
 #playpause{
     float: right;
+    clear: both;
 }
 
 .rule {
@@ -361,4 +362,8 @@ legend span {
 }
 .rule span {
     margin-right: 0.5em;
+}
+#timing{
+    float: right;
+    clear: both;
 }
