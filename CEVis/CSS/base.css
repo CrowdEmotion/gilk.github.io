@@ -367,3 +367,7 @@ legend span {
     float: right;
     clear: both;
 }
+
+.legendText, .legendCircle{
+    display: inline;
+}

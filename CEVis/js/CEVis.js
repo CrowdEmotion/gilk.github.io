@@ -3,7 +3,16 @@
 // MIT licence
 //Modified by Gil Kogan (gil@crowdemotion.co.uk)
 
-var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, divId:null,time:0, width:0,height:0, handleBar:null, events: {focus_ready:null}};
+
+var ceGraphTS_H = 350;
+
+var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, divId:null,time:0,
+    width:0,height:0, handleBar:null, events: {focus_ready:null}, init_H: ceGraphTS_H, margin:{
+        m: [ceGraphTS_H*(20.0/500.0), 0, ceGraphTS_H*(100.0/500.0), 0],
+        m2:[ceGraphTS_H*(430.0/500.0), 0, ceGraphTS_H*(5.0/500.0), 0],
+        m3:[ceGraphTS_H*(330.0/500.0), 0, ceGraphTS_H*(5.0/500.0), 0],
+        yLegend:0}
+};
 ceGraphTS.events.focus_ready = new Event('cegraphts_focus_ready');
 var gid = 0;
 
@@ -65,12 +74,12 @@ var d3Legend =function() {
                 .call(function (d) {
                     d.exit().remove()
                 })
-                .attr("y", function (d, i) {
-                    return i + "em"
+                .attr("x", function (d, i) {
+                    return i*7 + 1 + "em"
                 })
-                .attr("x", "1em")
+                .attr("y", 0)
                 .attr("class", function (d) {
-                    return "legend" + d.key + " gidlegendtext_" + gid
+                    return "legendText legend" + d.key + " gidlegendtext_" + gid
                 })
                 .attr("id", function (d) {
                     return "legend" + d.key + "text"
@@ -79,7 +88,6 @@ var d3Legend =function() {
                     return "emo." + d.key.toLowerCase()
                 })
                 .text(function (d) {
-                    ;
                     return d.key
                 })
                 .style("fill", function (d) {
@@ -99,16 +107,16 @@ var d3Legend =function() {
                 .call(function (d) {
                     d.exit().remove()
                 })
-                .attr("cy", function (d, i) {
-                    return i - 0.25 + "em"
+                .attr("cx", function (d, i) {
+                    return i*7 + "em"
                 })
-                .attr("cx", 0)
+                .attr("cy", "-0.5em")
                 .attr("r", "0.4em")
                 .style("fill", function (d) {
                     return d.value.color
                 })
                 .attr("class", function (d) {
-                    return "legend" + d.key + " " + "gidlegend_" + gid
+                    return "legendCircle legend" + d.key + " " + "gidlegend_" + gid
                 })
                 .on("click", legendClick)
                 .on("mouseover", legendMouseover)
@@ -132,10 +140,12 @@ var d3VRulerDraw= function(){
         .data([0]);
     ceGraphTS.graphRuler.enter().insert('div',":first-child")
         .attr('class', 'rule')
-        .append('span');
+        .append('span');;
     ceGraphTS.graphRuler.style('left', xpos + 'px');
+    //ceGraphTS.graphRuler.style('top', ceGraphTS.margin.m[0]+ceGraphTS.margin.yLegend+50 + 'px');
     ceGraphTS.graphRuler.style('height', ceGraphTS.height + 'px');
     ceGraphTS.graphRuler.attr('height', ceGraphTS.height + 'px');
+    //ceGraphTS.graphRuler.attr("transform", "translate(" + ceGraphTS.margin.m[3] + "," + (ceGraphTS.margin.m[0]+ceGraphTS.margin.yLegend+50) + ")")
     //ceGraphTS.graphRuler.select('span').text(xpos);
 };
 
@@ -196,7 +206,7 @@ var moveBar = function(){
     ceGraphTS.handleBar = setInterval(function(){
         if(vid.currentTime>0) {
             ceGraphTS.graphRuler.style('left', (vid.currentTime * pixelXSeconds) + 'px');
-            $('#timing').html((parseInt(vid.currentTime))+'s');
+            $('#timing').html((parseInt(vid.currentTime)+1)+'s');
         };
     },250);
 };
@@ -302,23 +312,29 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
     }
     dataFull = reformattedArray;
 
+    /** legend g container*/
+
+    /** end legend g container */
     if (graphType == "line") {
 
-        var init_H = 300;// parseInt(d3.select('#'+divId).style("height").substring(0,d3.select('#'+divId).style("width").length-2)) || 500;
+        var init_H = ceGraphTS.init_H;// parseInt(d3.select('#'+divId).style("height").substring(0,d3.select('#'+divId).style("width").length-2)) || 500;
         init_H = init_H>250 ? init_H : 250;
 
-        var m = [20, 150, 100, 20];
-//		var m2 =[430, 150, 20, 20]; // margins
+        //var m = [20, 150, 100, 20];
+        //var m2 =[430, 150, 20, 20]; // margins
 
-        var m = [init_H*(20.0/500.0), 150, init_H*(100.0/500.0), 20];
-        var m2 =[init_H*(430.0/500.0), 150, init_H*(20.0/500.0), 20]; // margins
+        var m = ceGraphTS.margin.m;
+        var m2 = ceGraphTS.margin.m2;
+        var m3 = ceGraphTS.margin.m3;
+        var yLegend = ceGraphTS.margin.yLegend;
 
         // var w = d3.select('#'+divId).style("width") - m[1] - m[3]; // width
         //	var w = 1200 - m[1] - m[3];
         var w = parseInt(d3.select('#'+divId).style("width").substring(0,d3.select('#'+divId).style("width").length-2)) - m[1] - m[3];
 
-        var h = init_H - m[0] - m[2];
-        var h2 = init_H - m2[0] - m2[2]; // height
+        var h = init_H - m[0] - m[2] - m3[3];
+        var h2 = init_H - m2[0] - m2[2] - m3[3]; // height
+        //var h3 = init_H - m2[0] - m3[2]; // height
 
         var normalised = false;
         var dataRanges=[];
@@ -419,6 +435,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
             .attr("width",w)
             .attr("height",h);
 
+
         var graph =	svgContainer.append("svg:g")
             .attr("class","focus")
             .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
@@ -429,6 +446,10 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
         var viewer = svgContainer.append("g")
             .attr("class","context")
             .attr("transform","translate(" + m2[3] + ","+m2[0]+")");
+
+        var legendWrap = svgContainer.append("g")
+            .attr("class","legendwrap")
+            .attr("transform","translate(" + m3[3] + ","+ ((m3[0])+100)+")");;
 
         var xAxis = d3.svg.axis().scale(x).tickSize(-h).tickSubdivide(true).tickFormat(function(d){return d+"s"});
         var xAxis2= d3.svg.axis().scale(x2).tickSize(-h).tickSubdivide(true).tickFormat(function(d){return d+"s"});
@@ -484,6 +505,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
             var datad = dataFull[pos].data;
             var datan = dataFull[pos].name;
             try {
+
                 graph.append("svg:path").attr("id", "path" + pos)
                     .attr("d", line(datad))
                     .attr("data-legend", datan)
@@ -504,6 +526,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
                     .attr("fill", "none")
                     .attr("visibility", "visible")
                     .attr("class", datan + "line gidline_" + gid)
+
             }catch(e){
 
             }
@@ -514,13 +537,13 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
             .call(brush)
             .selectAll("rect")
             .attr("y", -6)
-            .attr("height", h2 + 7);
+            .attr("height", h2);
 
         document.getElementById(ceGraphTS.divId).dispatchEvent(ceGraphTS.events.focus_ready);
 
-        var legend = graph.append("g")
+        var legend = legendWrap.append("g")
             .attr("class","legend")
-            .attr("transform","translate("+(w+m[3]+25)+",50)")
+            .attr("transform","translate(" + (m3[3]+25) + ",25)")
             .style("font-size","16px")
             .call(d3.legend)
             .on("click",adjustYDomain);
