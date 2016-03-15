@@ -8,9 +8,8 @@ var ceGraphTS_H = 350;
 
 var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, divId:null,time:0,
     width:0,height:0, handleBar:null, events: {focus_ready:null}, init_H: ceGraphTS_H, margin:{
-        m: [ceGraphTS_H*(20.0/500.0), 0, ceGraphTS_H*(100.0/500.0), 0],
-        m2:[ceGraphTS_H*(430.0/500.0), 0, ceGraphTS_H*(5.0/500.0), 0],
-        m3:[ceGraphTS_H*(330.0/500.0), 0, ceGraphTS_H*(5.0/500.0), 0],
+        m: [ceGraphTS_H*(20.0/500.0), 15, ceGraphTS_H*(100.0/500.0), 15],
+        m2:[ceGraphTS_H*(430.0/500.0), 15, ceGraphTS_H*(5.0/500.0), 15],
         yLegend:0}
 };
 ceGraphTS.events.focus_ready = new Event('cegraphts_focus_ready');
@@ -325,15 +324,15 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
 
         var m = ceGraphTS.margin.m;
         var m2 = ceGraphTS.margin.m2;
-        var m3 = ceGraphTS.margin.m3;
+//        var m3 = ceGraphTS.margin.m3;
         var yLegend = ceGraphTS.margin.yLegend;
 
         // var w = d3.select('#'+divId).style("width") - m[1] - m[3]; // width
         //	var w = 1200 - m[1] - m[3];
         var w = parseInt(d3.select('#'+divId).style("width").substring(0,d3.select('#'+divId).style("width").length-2)) - m[1] - m[3];
 
-        var h = init_H - m[0] - m[2] - m3[3];
-        var h2 = init_H - m2[0] - m2[2] - m3[3]; // height
+        var h = init_H - m[0] - m[2];// - m3[3];
+        var h2 = init_H - m2[0] - m2[2];// - m3[3]; // height
         //var h3 = init_H - m2[0] - m3[2]; // height
 
         var normalised = false;
@@ -427,7 +426,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
 
         var svgContainer = d3.select("#"+divId).append("svg:svg")
             .attr("width", w + m[1] + m[3])
-            .attr("height", h + m[0] + m[2]);
+            .attr("height", h + m[0] + m[2]+30);
 
         svgContainer.append("defs").append("clipPath")
             .attr("id","clip")
@@ -449,7 +448,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
 
         var legendWrap = svgContainer.append("g")
             .attr("class","legendwrap")
-            .attr("transform","translate(" + m3[3] + ","+ ((m3[0])+100)+")");;
+            .attr("transform","translate(" + 0 + ","+ (h + m[0] + m[2])+")");;
 
         var xAxis = d3.svg.axis().scale(x).tickSize(-h).tickSubdivide(true).tickFormat(function(d){return d+"s"});
         var xAxis2= d3.svg.axis().scale(x2).tickSize(-h).tickSubdivide(true).tickFormat(function(d){return d+"s"});
@@ -543,7 +542,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
 
         var legend = legendWrap.append("g")
             .attr("class","legend")
-            .attr("transform","translate(" + (m3[3]+25) + ",25)")
+            .attr("transform","translate(" + 25 + ",25)")
             .style("font-size","16px")
             .call(d3.legend)
             .on("click",adjustYDomain);
@@ -571,6 +570,5 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
 
 
 }
-
 
 
