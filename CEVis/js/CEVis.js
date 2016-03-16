@@ -5,12 +5,13 @@
 
 
 var ceGraphTS_H = 350;
+var ceGraphTS_M = 15;
 
 var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, video: null, divId:null,time:0,
-    width:0,height:0, handleBarMove:null, events: {focus_ready:null}, handleInitBar:null,
+    timeId: 'timing', width:0,height:0, events: {focus_ready:null},handleBarMove:null, handleMovieTime:null, handleInitBar:null, handleTimeHtml: null,
         init_H: ceGraphTS_H, margin:{
-        m: [ceGraphTS_H*(20.0/500.0), 15, ceGraphTS_H*(100.0/500.0), 15],
-        m2:[ceGraphTS_H*(430.0/500.0), 15, ceGraphTS_H*(5.0/500.0), 15],
+        m: [ceGraphTS_H*(20.0/500.0), ceGraphTS_M, ceGraphTS_H*(100.0/500.0), ceGraphTS_M],
+        m2:[ceGraphTS_H*(430.0/500.0), ceGraphTS_M, ceGraphTS_H*(5.0/500.0), ceGraphTS_M],
         yLegend:0}
 };
 ceGraphTS.events.focus_ready = new Event('cegraphts_focus_ready');
@@ -143,9 +144,9 @@ var d3VRulerDrawByEvt= function(x_pos){
         .attr('class', 'rule')
         .append('span');;
     ceGraphTS.graphRuler.style('left', xpos + 'px');
-    //ceGraphTS.graphRuler.style('top', ceGraphTS.margin.m[0]+ceGraphTS.margin.yLegend+50 + 'px');
     ceGraphTS.graphRuler.style('height', ceGraphTS.height + 'px');
     ceGraphTS.graphRuler.attr('height', ceGraphTS.height + 'px');
+    //ceGraphTS.graphRuler.style('top', ceGraphTS.margin.m[0]+ceGraphTS.margin.yLegend+50 + 'px');
     //ceGraphTS.graphRuler.attr("transform", "translate(" + ceGraphTS.margin.m[3] + "," + (ceGraphTS.margin.m[0]+ceGraphTS.margin.yLegend+50) + ")")
     //ceGraphTS.graphRuler.select('span').text(xpos);
 };
@@ -159,6 +160,8 @@ var d3VRulerInit = function (graphID, videoTag){
         moveBarByVideo('pause');
         videoPlayback('pause');
         d3VRulerDrawByEvt();
+        moveTime();
+        moveVideo();
     });
 
     d3.select('#'+graphID).on('click', function() {
@@ -167,13 +170,30 @@ var d3VRulerInit = function (graphID, videoTag){
 
 };
 
+var moveTime = function(){
+    var xpos = d3.event.pageX;
+    var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
+    displayTime((xpos/pixelXSeconds));
+};
+
+var moveVideo = function(){
+    var xpos = d3.event.pageX;
+    var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
+    videoSetTime((xpos/pixelXSeconds));
+};
+var deleteInterval =  function(interval){
+    if(interval) clearInterval(interval);
+}
+
 var moveVideoByBar = function(x_pos){
     var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
     var xpos = isNumeric(x_pos) ? x_pos : d3.event.pageX;
-    var left = ceGraphTS.graphRuler.style('left');
+    //var left = ceGraphTS.graphRuler.style('left');
     videoSetTime(xpos/pixelXSeconds)
     moveBarByVideo('play');
     videoPlayback('play');
+    deleteInterval(ceGraphTS.handleTimeHtml);
+    deleteInterval(ceGraphTS.handleMovieTime);
 };
 
 var moveBarByVideo = function (action){
@@ -183,7 +203,16 @@ var moveBarByVideo = function (action){
         stopBar();
     }else if(action == 'play') {
         initBar();
+    }else if(action == 'reset') {
+        stopBar();
+        resetBar();
     }
+};
+var resetBar = function(){
+    var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
+    if(ceGraphTS.handleInitBar) clearInterval(ceGraphTS.handleInitBar);
+    ceGraphTS.graphRuler.style('left','0px');
+    displayTime(0);
 };
 
 
@@ -193,7 +222,7 @@ var moveBar = function(){
     ceGraphTS.handleBarMove = setInterval(function(){
         if(ceGraphTS.video.currentTime>0) {
             ceGraphTS.graphRuler.style('left', (ceGraphTS.video.currentTime * pixelXSeconds) + 'px');
-            $('#timing').html(videoGetTime()+'s');
+            displayTime();
         };
     },250);
 };
@@ -208,7 +237,7 @@ var initBar = function(){
         if(ceGraphTS.width){
             moveBar();
         }
-    },250);
+    },150);
 };
 
 var videoPlayback = function(action){
@@ -218,13 +247,24 @@ var videoPlayback = function(action){
     if(action == 'pause'){
         if(!ceGraphTS.video.paused) ceGraphTS.video.pause();
     }
+    if(action == 'reset'){
+        if(!ceGraphTS.video.paused) ceGraphTS.video.pause();
+        ceGraphTS.video.currentTime = 0;
+    }
 };
+
+var displayTime = function(time){
+    var t = time? time : videoGetTime();
+
+    document.getElementById(ceGraphTS.timeId).innerHTML = t.toFixed(2)+'s';
+};
+
 var videoSetTime = function(time){
     time ? '' : time = 0;
-    ceGraphTS.video.currentTime = parseInt(time);
+    ceGraphTS.video.currentTime = (time);
 };
 var videoGetTime = function(){
-    return ceGraphTS.video.currentTime ? parseInt(ceGraphTS.video.currentTime) : 0;
+    return ceGraphTS.video.currentTime ? (ceGraphTS.video.currentTime) : 0;
 };
 
 var videoInit = function(videoId){
@@ -263,7 +303,7 @@ function normalise(arr){
 }
 
 
-var saveDim = function(){
+var saveBoxDimension = function(){
     if(ceGraphTS.width<=0) {
         ceGraphTS.width = d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().width;
         ceGraphTS.height = d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().height;
@@ -275,7 +315,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
     gid = divId.split('_');
     ceGraphTS.gid = gid = (gid[1])?  gid[1] : 0;
     ceGraphTS.divId = divId;
-    document.getElementById(ceGraphTS.divId).addEventListener('cegraphts_focus_ready', saveDim, false);
+    document.getElementById(ceGraphTS.divId).addEventListener('cegraphts_focus_ready', saveBoxDimension, false);
     videoId = videoId ? document.getElementById(videoId) : false;
     d3Legend();
     var positiveMood = [];

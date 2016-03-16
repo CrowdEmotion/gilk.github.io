@@ -102,12 +102,14 @@
             if(videoData && videoData.remoteLocation){
                 $('#video_wrapper').html(' ' +
                     '<div id="timing"></div>'+
-                    '<button id="playpause" >Play/Pause</button>'+
+                    '<button id="playpause" class="cmdbutton" >Play/Pause</button>'+
+                    '<button id="reset" class="cmdbutton" >Reset</button>'+
                     '<video id="facevideo" width="420">'+
                     '<source src="'+videoData.remoteLocation+'" type="video/mp4">'+
                     'Your browser does not support HTML5 video.'+
                     '</video>');
                 $('#playpause').on('click',playPause);
+                $('#reset').on('click',reset);
                 videoId = 'facevideo';
                 videoInit(videoId);
             }
@@ -134,9 +136,13 @@
                 myVideo.pause();
                 moveBarByVideo('pause');
             }
-
-
-        }
+        };
+        function reset (){
+            var myVideo = document.getElementById("facevideo");
+            myVideo.pause()
+            myVideo.currentTime = 0;
+            moveBarByVideo('reset');
+        };
 
     });
 })();
