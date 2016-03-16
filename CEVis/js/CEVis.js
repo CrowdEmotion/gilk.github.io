@@ -6,8 +6,9 @@
 
 var ceGraphTS_H = 350;
 
-var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, divId:null,time:0,
-    width:0,height:0, handleBar:null, events: {focus_ready:null}, init_H: ceGraphTS_H, margin:{
+var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, video: null, divId:null,time:0,
+    width:0,height:0, handleBarMove:null, events: {focus_ready:null}, handleInitBar:null,
+        init_H: ceGraphTS_H, margin:{
         m: [ceGraphTS_H*(20.0/500.0), 15, ceGraphTS_H*(100.0/500.0), 15],
         m2:[ceGraphTS_H*(430.0/500.0), 15, ceGraphTS_H*(5.0/500.0), 15],
         yLegend:0}
@@ -15,6 +16,9 @@ var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, divId:nu
 ceGraphTS.events.focus_ready = new Event('cegraphts_focus_ready');
 var gid = 0;
 
+var isNumeric = function(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n) && n!=null && n!=undefined && n!=NaN ;
+};
 
 var d3Legend =function() {
 
@@ -130,11 +134,9 @@ var d3Legend =function() {
         return g
     };
 };
-var isNumeric = function(n) {
-    return !isNaN(parseFloat(n)) && isFinite(n) && n!=null && n!=undefined && n!=NaN ;
-};
-var d3VRulerDraw= function(){
-    var xpos = d3.event.pageX;
+
+var d3VRulerDrawByEvt= function(x_pos){
+    var xpos = isNumeric(x_pos) ? x_pos : d3.event.pageX;
     ceGraphTS.graphRuler = d3.select('#'+ceGraphTS.divId).selectAll('div.rule')
         .data([0]);
     ceGraphTS.graphRuler.enter().insert('div',":first-child")
@@ -147,69 +149,88 @@ var d3VRulerDraw= function(){
     //ceGraphTS.graphRuler.attr("transform", "translate(" + ceGraphTS.margin.m[3] + "," + (ceGraphTS.margin.m[0]+ceGraphTS.margin.yLegend+50) + ")")
     //ceGraphTS.graphRuler.select('span').text(xpos);
 };
+var d3VRulerDrawCreate = function(){
+    d3VRulerDrawByEvt(0);
+};
 
-var d3VRuler = function(graphID, videoTag){
-    //TODO SVGLoad event  not working
-    /*
-    d3.select('#'+graphID+' svg').on('SVGLoad', function() {
-        d3VRulerDraw();
-    });
-    */
+var d3VRulerInit = function (graphID, videoTag){
+    d3VRulerDrawCreate();
     d3.select('#'+graphID+'').on('mousemove', function() {
-        d3VRulerDraw();
-        graphMoveBarByVideo(ceGraphTS.videoId, 'pause');
+        moveBarByVideo('pause');
+        videoPlayback('pause');
+        d3VRulerDrawByEvt();
     });
-    /* TODO
-    d3.select('#graph').on('click', function() {
-        graphMoveVideoByBar();
+
+    d3.select('#'+graphID).on('click', function() {
+        moveVideoByBar();
     });
-    */
+
 };
 
-var graphMoveVideoByBar = function(videoId){
-    //WIP
-    if(videoId) ceGraphTS.videoId =  videoId;
+var moveVideoByBar = function(x_pos){
     var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
-    var vid =  document.getElementById(ceGraphTS.videoId);
-    var xpos = d3.event.pageX;
+    var xpos = isNumeric(x_pos) ? x_pos : d3.event.pageX;
     var left = ceGraphTS.graphRuler.style('left');
-    vid.currentStyle = xpos/pixelXSeconds;
-    if(handleBar){
-        clearInterval(handleBar);
-    }else{
-
-    }
-    graphMoveBarByVideo();
+    videoSetTime(xpos/pixelXSeconds)
+    moveBarByVideo('play');
+    videoPlayback('play');
 };
 
-var graphMoveBarByVideo = function(videoId,action){
-    if(videoId) ceGraphTS.videoId =  videoId;
-    var handleFocus = null;
+var moveBarByVideo = function (action){
+    action? '': action='play';
+    ceGraphTS.handleInitBar = null;
     if(action == 'pause' ||  action == 'stop' ){
-        if(handleFocus) clearInterval(handleFocus);
-    }else{
-        handleFocus = setInterval(function(){
-            if(ceGraphTS.width){
-                moveBar()
-                clearInterval(handleFocus);
-            }
-        },250);
+        stopBar();
+    }else if(action == 'play') {
+        initBar();
     }
-
-
-
 };
+
+
 var moveBar = function(){
     var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
-    var vid =  document.getElementById(ceGraphTS.videoId);
-    ceGraphTS.handleBar = setInterval(function(){
-        if(vid.currentTime>0) {
-            ceGraphTS.graphRuler.style('left', (vid.currentTime * pixelXSeconds) + 'px');
-            $('#timing').html((parseInt(vid.currentTime)+1)+'s');
+    if(ceGraphTS.handleInitBar) clearInterval(ceGraphTS.handleInitBar);
+    ceGraphTS.handleBarMove = setInterval(function(){
+        if(ceGraphTS.video.currentTime>0) {
+            ceGraphTS.graphRuler.style('left', (ceGraphTS.video.currentTime * pixelXSeconds) + 'px');
+            $('#timing').html(videoGetTime()+'s');
         };
     },250);
 };
 
+var stopBar = function(){
+    if(ceGraphTS.handleBarMove) clearInterval(ceGraphTS.handleBarMove);
+    if(ceGraphTS.handleInitBar) clearInterval(ceGraphTS.handleInitBar);
+};
+
+var initBar = function(){
+    ceGraphTS.handleInitBar = setInterval(function(){
+        if(ceGraphTS.width){
+            moveBar();
+        }
+    },250);
+};
+
+var videoPlayback = function(action){
+    if(!action || action == 'play'){
+        ceGraphTS.video.play();
+    }
+    if(action == 'pause'){
+        if(!ceGraphTS.video.paused) ceGraphTS.video.pause();
+    }
+};
+var videoSetTime = function(time){
+    time ? '' : time = 0;
+    ceGraphTS.video.currentTime = parseInt(time);
+};
+var videoGetTime = function(){
+    return ceGraphTS.video.currentTime ? parseInt(ceGraphTS.video.currentTime) : 0;
+};
+
+var videoInit = function(videoId){
+    ceGraphTS.videoId = videoId;
+    ceGraphTS.video = document.getElementById(videoId);
+}
 var getMetricName = function(name,type){
     if(type=='kanako') {
         return name.charAt(0).toUpperCase() + name.slice(1);
@@ -217,6 +238,7 @@ var getMetricName = function(name,type){
         return (name.charAt(0).toUpperCase()+name.slice(1) ).substring(0, name.length - 6 );
     }
 };
+
 var clearNumber = function(n){
     return n;
     /*var n = new String(n);
@@ -549,7 +571,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
 
 
         if(videoId){
-            d3VRuler(divId, videoId);
+            d3VRulerInit(divId);
         }
     }
     for (var pos = 1; pos <= dataFull.length-1; pos++){

@@ -109,6 +109,7 @@
                     '</video>');
                 $('#playpause').on('click',playPause);
                 videoId = 'facevideo';
+                videoInit(videoId);
             }
 			d3.select("#graph").html("");
             d3.select('#resEmo_0 svg').html("");
@@ -127,11 +128,11 @@
             var myVideo = document.getElementById("facevideo");
             if (myVideo.paused){
                 myVideo.play();
-                graphMoveBarByVideo('facevideo');
+                moveBarByVideo('play');
             }
             else {
                 myVideo.pause();
-                graphMoveBarByVideo('facevideo','pause');
+                moveBarByVideo('pause');
             }
 
 
