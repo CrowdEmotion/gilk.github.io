@@ -139,7 +139,7 @@ var d3Legend =function() {
 
 var d3VRulerDrawByEvt= function(x_pos){
     var xpos = isNumeric(x_pos) ? x_pos : d3.event.pageX;
-    x_pos = x_pos -  ceGraphTS_M;
+    x_pos = x_pos -  ceGraphTS_M - ceGraphTS.outerLeft;
     ceGraphTS.graphRuler = d3.select('#'+ceGraphTS.divId).selectAll('div.rule')
         .data([0]);
     ceGraphTS.graphRuler.enter().insert('div',":first-child")
@@ -153,7 +153,7 @@ var d3VRulerDrawByEvt= function(x_pos){
     //ceGraphTS.graphRuler.select('span').text(xpos);
 };
 var d3VRulerDrawCreate = function(){
-    d3VRulerDrawByEvt(0);
+    d3VRulerDrawByEvt(ceGraphTS_M+ceGraphTS.outerLeft);
 };
 
 var d3VRulerInit = function (graphID, videoTag){
@@ -173,7 +173,7 @@ var d3VRulerInit = function (graphID, videoTag){
 };
 
 var getPos = function(xpos){
-    return (xpos-ceGraphTS_M) / ceGraphTS.pixelXSeconds;
+    return (xpos-ceGraphTS_M-ceGraphTS.outerLeft) / ceGraphTS.pixelXSeconds;
 };
 var moveTime = function(){
     displayTime(getPos( d3.event.pageX));
@@ -211,7 +211,7 @@ var moveBarByVideo = function (action){
 };
 var resetBar = function(){
     if(ceGraphTS.handleInitBar) clearInterval(ceGraphTS.handleInitBar);
-    ceGraphTS.graphRuler.style('left','0px');
+    ceGraphTS.graphRuler.style('left',(ceGraphTS_M+ceGraphTS.outerLeft)+'px');
     displayTime(0);
 };
 
@@ -220,7 +220,7 @@ var moveBar = function(){
     if(ceGraphTS.handleInitBar) clearInterval(ceGraphTS.handleInitBar);
     ceGraphTS.handleBarMove = setInterval(function(){
         if(ceGraphTS.video.currentTime>0) {
-            ceGraphTS.graphRuler.style('left', (ceGraphTS.video.currentTime * ceGraphTS.pixelXSeconds) + 'px');
+            ceGraphTS.graphRuler.style('left', (ceGraphTS.video.currentTime * ceGraphTS.pixelXSeconds) + (ceGraphTS_M+ceGraphTS.outerLeft) + 'px');
             displayTime();
         };
     },250);
