@@ -5,14 +5,15 @@
 
 
 var ceGraphTS_H = 350;
-var ceGraphTS_M = 15;
+var ceGraphTS_M = 20;
 
 var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, video: null, divId:null,time:0,
-    timeId: 'timing', width:0,height:0, events: {focus_ready:null},handleBarMove:null, handleMovieTime:null, handleInitBar:null, handleTimeHtml: null,
-        init_H: ceGraphTS_H, margin:{
+    timeId: 'timing', width:0,height:0, left:0, outerLeft: 0, right:0, events: {focus_ready:null},handleBarMove:null, handleMovieTime:null, handleInitBar:null, handleTimeHtml: null,
+        init_H: ceGraphTS_H, pixelXSeconds: 0, margin:{
         m: [ceGraphTS_H*(20.0/500.0), ceGraphTS_M, ceGraphTS_H*(100.0/500.0), ceGraphTS_M],
         m2:[ceGraphTS_H*(430.0/500.0), ceGraphTS_M, ceGraphTS_H*(5.0/500.0), ceGraphTS_M],
-        yLegend:0}
+        yLegend:0},xScale: null
+
 };
 ceGraphTS.events.focus_ready = new Event('cegraphts_focus_ready');
 var gid = 0;
@@ -131,19 +132,20 @@ var d3Legend =function() {
                 .attr("y", (lbbox.y - legendPadding))
                 .attr("height", (lbbox.height + 2 * legendPadding))
                 .attr("width", (lbbox.width + 2 * legendPadding))
-        })
+        });
         return g
     };
 };
 
 var d3VRulerDrawByEvt= function(x_pos){
     var xpos = isNumeric(x_pos) ? x_pos : d3.event.pageX;
+    x_pos = x_pos -  ceGraphTS_M;
     ceGraphTS.graphRuler = d3.select('#'+ceGraphTS.divId).selectAll('div.rule')
         .data([0]);
     ceGraphTS.graphRuler.enter().insert('div',":first-child")
         .attr('class', 'rule')
         .append('span');;
-    ceGraphTS.graphRuler.style('left', xpos + 'px');
+    ceGraphTS.graphRuler.style('left', (xpos) + 'px');
     ceGraphTS.graphRuler.style('height', ceGraphTS.height + 'px');
     ceGraphTS.graphRuler.attr('height', ceGraphTS.height + 'px');
     //ceGraphTS.graphRuler.style('top', ceGraphTS.margin.m[0]+ceGraphTS.margin.yLegend+50 + 'px');
@@ -170,26 +172,25 @@ var d3VRulerInit = function (graphID, videoTag){
 
 };
 
+var getPos = function(xpos){
+    return (xpos-ceGraphTS_M) / ceGraphTS.pixelXSeconds;
+};
 var moveTime = function(){
-    var xpos = d3.event.pageX;
-    var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
-    displayTime((xpos/pixelXSeconds));
+    displayTime(getPos( d3.event.pageX));
 };
 
 var moveVideo = function(){
-    var xpos = d3.event.pageX;
-    var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
-    videoSetTime((xpos/pixelXSeconds));
+    videoSetTime(getPos( d3.event.pageX));
 };
 var deleteInterval =  function(interval){
     if(interval) clearInterval(interval);
 }
 
 var moveVideoByBar = function(x_pos){
-    var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
+
     var xpos = isNumeric(x_pos) ? x_pos : d3.event.pageX;
     //var left = ceGraphTS.graphRuler.style('left');
-    videoSetTime(xpos/pixelXSeconds)
+    videoSetTime(getPos(xpos));
     moveBarByVideo('play');
     videoPlayback('play');
     deleteInterval(ceGraphTS.handleTimeHtml);
@@ -209,7 +210,6 @@ var moveBarByVideo = function (action){
     }
 };
 var resetBar = function(){
-    var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
     if(ceGraphTS.handleInitBar) clearInterval(ceGraphTS.handleInitBar);
     ceGraphTS.graphRuler.style('left','0px');
     displayTime(0);
@@ -217,11 +217,10 @@ var resetBar = function(){
 
 
 var moveBar = function(){
-    var pixelXSeconds = ceGraphTS.width / (ceGraphTS.time/1000);
     if(ceGraphTS.handleInitBar) clearInterval(ceGraphTS.handleInitBar);
     ceGraphTS.handleBarMove = setInterval(function(){
         if(ceGraphTS.video.currentTime>0) {
-            ceGraphTS.graphRuler.style('left', (ceGraphTS.video.currentTime * pixelXSeconds) + 'px');
+            ceGraphTS.graphRuler.style('left', (ceGraphTS.video.currentTime * ceGraphTS.pixelXSeconds) + 'px');
             displayTime();
         };
     },250);
@@ -285,7 +284,7 @@ var clearNumber = function(n){
     n = n.replace(/[^\d.-]/g, '');
     return parseFloat(n,5);
     */
-}
+};
 
 
 function normalise(arr){
@@ -305,8 +304,21 @@ function normalise(arr){
 
 var saveBoxDimension = function(){
     if(ceGraphTS.width<=0) {
-        ceGraphTS.width = d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().width;
+        /*
+        console.log('d3.select("#" + ceGraphTS.divId + " svg").node().getBoundingClientRect().width');
+        console.log(d3.select("#" + ceGraphTS.divId + " svg").node().getBoundingClientRect().width);
+        console.log('d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().width');
+        console.log(d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().width);
+        console.log('$("#" + ceGraphTS.divId).width()');
+        console.log($("#" + ceGraphTS.divId).width());
+        */
+        ceGraphTS.width = d3.select("#" + ceGraphTS.divId + " svg").node().getBoundingClientRect().width;
+        ceGraphTS.left = ceGraphTS.width - ceGraphTS.margin.m[1];
+        ceGraphTS.outerLeft = $("#" + ceGraphTS.divId).offset();
+        ceGraphTS.outerLeft = ceGraphTS.outerLeft.left;
         ceGraphTS.height = d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().height;
+        ceGraphTS.pixelXSeconds = ceGraphTS.xScale(1);
+
     }
 };
 
@@ -341,10 +353,11 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
         }
     }
 
+    /*
     positiveMood=normalise(positiveMood);
     negativeMood=normalise(negativeMood);
     engagement=normalise(engagement);
-
+    */
     //TODO engagement
     /*
     dataFull = [
@@ -427,7 +440,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
             ymaxa=1;
         }
 
-        var x  = d3.scale.linear().domain([0, timetrans(dataFull[0].data[dataFull[0].data.length-1])]).range([0, w]);
+        var x = ceGraphTS.xScale = d3.scale.linear().domain([0, timetrans(dataFull[0].data[dataFull[0].data.length-1])]).range([0, w]);
         var x2 = d3.scale.linear().domain(x.domain()).range([0,w]);
 
         var y = d3.scale.linear().domain([ymina, ymaxa]).range([h, 0]);
