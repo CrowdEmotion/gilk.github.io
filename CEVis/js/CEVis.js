@@ -8,8 +8,8 @@ var ceGraphTS_H = 350;
 var ceGraphTS_M = 20;
 
 var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, video: null, divId:null,time:0,
-    timeId: 'timing', width:0,height:0, left:0, outerLeft: 0, right:0, events: {focus_ready:null},handleBarMove:null, handleMovieTime:null, handleInitBar:null, handleTimeHtml: null,
-        init_H: ceGraphTS_H, pixelXSeconds: 0, margin:{
+    timeId: 'timing', width:0,height:0, left:0, outerLeft: 0, right:0, top:0, outerTop: 0,events: {focus_ready:null},handleBarMove:null, handleMovieTime:null, handleInitBar:null, handleTimeHtml: null,
+        init_H: ceGraphTS_H, pixelXSeconds: 0, haveClicked: false, margin:{
         m: [ceGraphTS_H*(20.0/500.0), ceGraphTS_M, ceGraphTS_H*(100.0/500.0), ceGraphTS_M],
         m2:[ceGraphTS_H*(430.0/500.0), ceGraphTS_M, ceGraphTS_H*(5.0/500.0), ceGraphTS_M],
         yLegend:0},xScale: null
@@ -152,22 +152,43 @@ var d3VRulerDrawByEvt= function(x_pos){
     //ceGraphTS.graphRuler.attr("transform", "translate(" + ceGraphTS.margin.m[3] + "," + (ceGraphTS.margin.m[0]+ceGraphTS.margin.yLegend+50) + ")")
     //ceGraphTS.graphRuler.select('span').text(xpos);
 };
-var d3VRulerDrawCreate = function(){
-    d3VRulerDrawByEvt(ceGraphTS_M+ceGraphTS.outerLeft);
-};
 
+var isInsideFocus = function(pos,type){
+    type? '': type='y';
+    pos? '' : pos=d3.event.pageY;
+
+    console.log("type == 'y' && pos<=ceGraphTS.outerTop && pos>=ceGraphTS.outerTop+ceGraphTS.height");
+    console.log(type, pos, ceGraphTS.outerTop, ceGraphTS.outerTop+ceGraphTS.height);
+    if(type == 'y' && pos>=ceGraphTS.outerTop && pos<=ceGraphTS.outerTop+ceGraphTS.height){
+        console.log('isInsideFocus true');
+        return true;
+    }
+    console.log('isInsideFocus false');
+    return false;
+};
 var d3VRulerInit = function (graphID, videoTag){
-    d3VRulerDrawCreate();
+    d3VRulerDrawByEvt(ceGraphTS_M+ceGraphTS.outerLeft);
+
     d3.select('#'+graphID+'').on('mousemove', function() {
-        moveBarByVideo('pause');
-        videoPlayback('pause');
-        d3VRulerDrawByEvt();
-        moveTime();
-        moveVideo();
+        if(isInsideFocus()) {
+            if(!ceGraphTS.haveClicked) {
+                moveBarByVideo('pause');
+                videoPlayback('pause');
+                d3VRulerDrawByEvt();
+                moveTime();
+                moveVideo();
+            }
+        }
+        if(!isInsideFocus()){
+            ceGraphTS.haveClicked = false;
+        }
     });
 
     d3.select('#'+graphID).on('click', function() {
-        moveVideoByBar();
+        if(isInsideFocus()) {
+            ceGraphTS.haveClicked = true;
+            moveVideoByBar();
+        };
     });
 
 };
@@ -314,8 +335,9 @@ var saveBoxDimension = function(){
         */
         ceGraphTS.width = d3.select("#" + ceGraphTS.divId + " svg").node().getBoundingClientRect().width;
         ceGraphTS.left = ceGraphTS.width - ceGraphTS.margin.m[1];
-        ceGraphTS.outerLeft = $("#" + ceGraphTS.divId).offset();
-        ceGraphTS.outerLeft = ceGraphTS.outerLeft.left;
+        ceGraphTS.outerLeft = $("#" + ceGraphTS.divId).offset().left;
+        ceGraphTS.top =  ceGraphTS.margin.m[0];
+        ceGraphTS.outerTop = $("#" + ceGraphTS.divId).offset().top;
         ceGraphTS.height = d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().height;
         ceGraphTS.pixelXSeconds = ceGraphTS.xScale(1);
 
