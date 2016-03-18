@@ -97,7 +97,7 @@
 				return this.value;
 			}).get();
             var videoId = null
-            if(videoData && videoData.remoteLocation){
+            if(videoData && videoData.remoteLocation && window.location.search.indexOf('video=true')>-1){
                 $('#video_wrapper').html(' ' +
                     '<div id="timing"></div>'+
                     '<button id="playpause" class="cmdbutton" >Play/Pause</button>'+
