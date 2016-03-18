@@ -4,6 +4,7 @@
 	var username, password;
     var kanakoMetrics = [1,3,4,5,6,7,8];
     var suwakoMetrics = [23,25,26,27,28,29,30];
+	var engine = 'kanako';
     var videoData = null;
     var graphID = 'graph_0';
 	
@@ -33,18 +34,15 @@
 						$('#container').html(
 							'<div id="form_graph" style="display: inline">'+
 							'<input id="responseId" placeholder="response ID" type="text"  class="inline"  value="100226">'+
-							'<input id="checkHappy" type="checkbox"  class="inline, metricCheck"  value="3" checked="checked"> Happy'+
-							'<input id="checkSurprise" type="checkbox"  class="inline, metricCheck"  value="4" checked="checked"> Surprise'+
-							'<input id="checkAngry" type="checkbox"  class="inline, metricCheck"  value="5" checked="checked"> Angry'+
-							'<input id="checkDisgust" type="checkbox"  class="inline, metricCheck"  value="6" checked="checked"> Disgust'+
-							'<input id="checkFear" type="checkbox"  class="inline, metricCheck"  value="7" checked="checked"> Fear'+
-							'<input id="checkSadness" type="checkbox"  class="inline, metricCheck"  value="8" checked="checked"> Sadness'+
-							'<input id="checkPositiveMood" type="checkbox"  class="inline, metricCheck"  value="9" checked="checked"> Positive mood'+
-							'<input id="checkNegativeMood" type="checkbox"  class="inline, metricCheck"  value="10" checked="checked"> Negative mood'+
-							'<input id="checkEngagement" type="checkbox"  class="inline, metricCheck"  value="11" checked="checked"> Engagement '+
-							'<input id="submitRequestId" type="button"  class="inline"  value="Send Request" >'+
-                            '<select id="engine" type="select"  class="inline">' +
-                            '<option value="kanako" selected >Kanako</option><option value="suwako">Suwako</option></select></div>'+
+							'<input id="checkHappy" type="checkbox"  class="inline metricCheck"  value="3" checked="checked"> Happy'+
+							'<input id="checkSurprise" type="checkbox"  class="inline metricCheck"  value="4" checked="checked"> Surprise'+
+							'<input id="checkAngry" type="checkbox"  class="inline metricCheck"  value="5" checked="checked"> Angry'+
+							'<input id="checkDisgust" type="checkbox"  class="inline metricCheck"  value="6" checked="checked"> Disgust'+
+							'<input id="checkFear" type="checkbox"  class="inline metricCheck"  value="7" checked="checked"> Fear'+
+							'<input id="checkSadness" type="checkbox"  class="inline metricCheck"  value="8" checked="checked"> Sadness'+
+                            '<select id="engine" type="select"  class="inline" >' +
+                            '<option value="kanako" selected >Kanako</option><option value="suwako">Suwako / CLM</option></select>'+
+							'<input id="submitRequestId" type="button"  class="inline"  value="Send Request" ></div>'+
 							'<div id="'+graphID+'"></div></div>');
 							$('#responseId').keypress(function (e) {
 								if (e.which==13){
@@ -56,7 +54,7 @@
 						});
 						$('#container').on( 'click', '#submitRequestId', function () {
                             var respID = $('#responseId').val();
-                            var engine = $("select#engine option").filter(":selected").val();
+							engine = $("select#engine option").filter(":selected").val();
                             var engineMetric = kanakoMetrics;
                             if(engine == 'suwako'){
                                 engineMetric = suwakoMetrics;
@@ -115,7 +113,7 @@
             }
 			d3.select("#graph").html("");
             d3.select('#resEmo_0 svg').html("");
-			showGraph(apiData,"line",metricIds,graphID,true,videoId);
+			showGraph(apiData,"line",metricIds,graphID,true,videoId,engine);
 			$('#'+graphID).slideDown('slow');
 			window.addEventListener('resize', function () {
 				d3.select("#"+graphID).html("");

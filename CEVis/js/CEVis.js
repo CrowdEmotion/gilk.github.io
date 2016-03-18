@@ -627,12 +627,20 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
             d3VRulerInit(divId);
         }
     }
+
     for (var pos = 1; pos <= dataFull.length-1; pos++){
-        if(initState.indexOf(pos+2+"") == -1){
+        var visible = true;
+        if(engine == 'kanako' && initState.indexOf(pos+2+"") == -1){
+            visible = false;
+        }else if(engine == 'suwako' && initState.indexOf(pos+24+"") == -1){
+            visible = false;
+        }
+        if(!visible){
             d3.selectAll("#"+divId+" ."+dataFull[pos].name+"line").attr("visibility","hidden");
             d3.selectAll("#"+divId+" .legend"+dataFull[pos].name).style("fill","grey");
         }
     }
+
 
 //	var el = d3.select('#'+divId);
 //
