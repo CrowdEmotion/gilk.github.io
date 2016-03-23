@@ -7,7 +7,9 @@
 	var engine = 'kanako';
     var videoData = null;
     var graphID = 'graph_0';
-	
+    isNumeric = function(n) {
+        return !isNaN(parseFloat(n)) && isFinite(n) && n!=null && n!=undefined && n!=NaN ;
+    };
 	$(document).ready(function () {
 
 
@@ -66,12 +68,18 @@
                                 $('#checkSadness').val(30);
                             }
 
-                            ceclient.readFacevideoInfo(respID,
-                                function(res){
-                                    videoData = res;
-                                    ceclient.readTimeseries(respID,engineMetric,drawGraph,true);
-                                }
-                            );
+                                //TODO load media video .csv
+                                ceclient.readFacevideoInfo(respID,
+                                    function(res){
+                                        videoData = res;
+                                        if(isNumeric(respID)) {
+                                            ceclient.readTimeseries(respID, engineMetric, drawGraph, true);
+                                        }else{
+                                            drawGraph(respID);
+                                        }
+                                    }
+                                );
+
 
 						});
 						$('#container').on( 'click', '#submitLogout', function () {
@@ -113,12 +121,12 @@
             }
 			d3.select("#graph").html("");
             d3.select('#resEmo_0 svg').html("");
-			showGraph(apiData,"line",metricIds,graphID,true,videoId,engine);
+			ceTimeSeries.showGraph(apiData,"line",metricIds,graphID,true,videoId,engine);
 			$('#'+graphID).slideDown('slow');
 			window.addEventListener('resize', function () {
 				d3.select("#"+graphID).html("");
 				console.log(parseInt(d3.select("#"+graphID).style("width").substring(0,d3.select("#"+graphID).style("width").length-2)));
-			    showGraph(apiData,"line",metricIds,graphID,true,videoId);
+                ceTimeSeries.showGraph(apiData,"line",metricIds,graphID,true,videoId);
 		//		console.log(parseInt(d3.select("#graph").style("width").substring(0,d3.select("#graph").style("width").length-2)));
 			});
 		};

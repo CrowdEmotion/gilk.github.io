@@ -7,7 +7,7 @@
 var ceGraphTS_H = 350;
 var ceGraphTS_M = 20;
 
-var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, video: null, divId:null,time:0,
+var ceTimeSeries = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, video: null, divId:null,time:0,
     timeId: 'timing', width:0,height:0, left:0, outerLeft: 0, right:0, top:0, outerTop: 0,events: {focus_ready:null},handleBarMove:null, handleMovieTime:null, handleInitBar:null, handleTimeHtml: null,
         init_H: ceGraphTS_H, pixelXSeconds: 0, haveClicked: false, margin:{
         m: [ceGraphTS_H*(20.0/500.0), ceGraphTS_M, ceGraphTS_H*(100.0/500.0), ceGraphTS_M],
@@ -15,21 +15,20 @@ var ceGraphTS = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, video: n
         yLegend:0},xScale: null
 
 };
-ceGraphTS.events.focus_ready = new Event('cegraphts_focus_ready');
-var gid = 0;
+ceTimeSeries.events.focus_ready = new Event('cegraphts_focus_ready');
 
-var isNumeric = function(n) {
+ceTimeSeries.isNumeric = function(n) {
     return !isNaN(parseFloat(n)) && isFinite(n) && n!=null && n!=undefined && n!=NaN ;
 };
 
-var d3Legend =function() {
+ceTimeSeries.d3Legend =function() {
 
     d3.legend = function (g) {
-        var gid = ceGraphTS.gid;
+        var gid = ceTimeSeries.gid;
         g.each(function () {
             var g = d3.select(this),
                 items = {},
-                svg = d3.select("#" + ceGraphTS.divId + ' svg'),
+                svg = d3.select("#" + ceTimeSeries.divId + ' svg'),
                 legendPadding = 0,
                 lb = g.selectAll(".legend-box").data([true]),
                 li = g.selectAll(".legend-items").data([true])
@@ -138,28 +137,26 @@ var d3Legend =function() {
 };
 
 var d3VRulerDrawByEvt= function(x_pos){
-    var xpos = isNumeric(x_pos) ? x_pos : d3.event.pageX;
-    x_pos = x_pos -  ceGraphTS_M - ceGraphTS.outerLeft;
-    ceGraphTS.graphRuler = d3.select('#'+ceGraphTS.divId).selectAll('div.rule')
+    var xpos = ceTimeSeries.isNumeric(x_pos) ? x_pos : d3.event.pageX;
+    x_pos = x_pos -  ceGraphTS_M - ceTimeSeries.outerLeft;
+    ceTimeSeries.graphRuler = d3.select('#'+ceTimeSeries.divId).selectAll('div.rule')
         .data([0]);
-    ceGraphTS.graphRuler.enter().insert('div',":first-child")
+    ceTimeSeries.graphRuler.enter().insert('div',":first-child")
         .attr('class', 'rule')
         .append('span');;
-    ceGraphTS.graphRuler.style('left', (xpos) + 'px');
-    ceGraphTS.graphRuler.style('height', ceGraphTS.height + 'px');
-    ceGraphTS.graphRuler.attr('height', ceGraphTS.height + 'px');
-    //ceGraphTS.graphRuler.style('top', ceGraphTS.margin.m[0]+ceGraphTS.margin.yLegend+50 + 'px');
-    //ceGraphTS.graphRuler.attr("transform", "translate(" + ceGraphTS.margin.m[3] + "," + (ceGraphTS.margin.m[0]+ceGraphTS.margin.yLegend+50) + ")")
-    //ceGraphTS.graphRuler.select('span').text(xpos);
+    ceTimeSeries.graphRuler.style('left', (xpos) + 'px');
+    ceTimeSeries.graphRuler.style('height', ceTimeSeries.height + 'px');
+    ceTimeSeries.graphRuler.attr('height', ceTimeSeries.height + 'px');
+    //ceTimeSeries.graphRuler.style('top', ceTimeSeries.margin.m[0]+ceTimeSeries.margin.yLegend+50 + 'px');
+    //ceTimeSeries.graphRuler.attr("transform", "translate(" + ceTimeSeries.margin.m[3] + "," + (ceTimeSeries.margin.m[0]+ceTimeSeries.margin.yLegend+50) + ")")
+    //ceTimeSeries.graphRuler.select('span').text(xpos);
 };
 
 var isInsideFocus = function(pos,type){
     type? '': type='y';
     pos? '' : pos=d3.event.pageY;
 
-    console.log("type == 'y' && pos<=ceGraphTS.outerTop && pos>=ceGraphTS.outerTop+ceGraphTS.height");
-    console.log(type, pos, ceGraphTS.outerTop, ceGraphTS.outerTop+ceGraphTS.height);
-    if(type == 'y' && pos>=ceGraphTS.outerTop && pos<=ceGraphTS.outerTop+ceGraphTS.height){
+    if(type == 'y' && pos>=ceTimeSeries.outerTop && pos<=ceTimeSeries.outerTop+ceTimeSeries.height){
         console.log('isInsideFocus true');
         return true;
     }
@@ -167,11 +164,11 @@ var isInsideFocus = function(pos,type){
     return false;
 };
 var d3VRulerInit = function (graphID, videoTag){
-    d3VRulerDrawByEvt(ceGraphTS_M+ceGraphTS.outerLeft);
+    d3VRulerDrawByEvt(ceGraphTS_M+ceTimeSeries.outerLeft);
 
     d3.select('#'+graphID+'').on('mousemove', function() {
         if(isInsideFocus()) {
-            if(!ceGraphTS.haveClicked) {
+            if(!ceTimeSeries.haveClicked) {
                 moveBarByVideo('pause');
                 videoPlayback('pause');
                 d3VRulerDrawByEvt();
@@ -180,13 +177,13 @@ var d3VRulerInit = function (graphID, videoTag){
             }
         }
         if(!isInsideFocus()){
-            ceGraphTS.haveClicked = false;
+            ceTimeSeries.haveClicked = false;
         }
     });
 
     d3.select('#'+graphID).on('click', function() {
         if(isInsideFocus()) {
-            ceGraphTS.haveClicked = true;
+            ceTimeSeries.haveClicked = true;
             moveVideoByBar();
         };
     });
@@ -194,7 +191,7 @@ var d3VRulerInit = function (graphID, videoTag){
 };
 
 var getPos = function(xpos){
-    return (xpos-ceGraphTS_M-ceGraphTS.outerLeft) / ceGraphTS.pixelXSeconds;
+    return (xpos-ceGraphTS_M-ceTimeSeries.outerLeft) / ceTimeSeries.pixelXSeconds;
 };
 var moveTime = function(){
     displayTime(getPos( d3.event.pageX));
@@ -209,18 +206,18 @@ var deleteInterval =  function(interval){
 
 var moveVideoByBar = function(x_pos){
 
-    var xpos = isNumeric(x_pos) ? x_pos : d3.event.pageX;
-    //var left = ceGraphTS.graphRuler.style('left');
+    var xpos = ceTimeSeries.isNumeric(x_pos) ? x_pos : d3.event.pageX;
+    //var left = ceTimeSeries.graphRuler.style('left');
     videoSetTime(getPos(xpos));
     moveBarByVideo('play');
     videoPlayback('play');
-    deleteInterval(ceGraphTS.handleTimeHtml);
-    deleteInterval(ceGraphTS.handleMovieTime);
+    deleteInterval(ceTimeSeries.handleTimeHtml);
+    deleteInterval(ceTimeSeries.handleMovieTime);
 };
 
 var moveBarByVideo = function (action){
     action? '': action='play';
-    ceGraphTS.handleInitBar = null;
+    ceTimeSeries.handleInitBar = null;
     if(action == 'pause' ||  action == 'stop' ){
         stopBar();
     }else if(action == 'play') {
@@ -231,30 +228,30 @@ var moveBarByVideo = function (action){
     }
 };
 var resetBar = function(){
-    if(ceGraphTS.handleInitBar) clearInterval(ceGraphTS.handleInitBar);
-    ceGraphTS.graphRuler.style('left',(ceGraphTS_M+ceGraphTS.outerLeft)+'px');
+    if(ceTimeSeries.handleInitBar) clearInterval(ceTimeSeries.handleInitBar);
+    ceTimeSeries.graphRuler.style('left',(ceGraphTS_M+ceTimeSeries.outerLeft)+'px');
     displayTime(0);
 };
 
 
 var moveBar = function(){
-    if(ceGraphTS.handleInitBar) clearInterval(ceGraphTS.handleInitBar);
-    ceGraphTS.handleBarMove = setInterval(function(){
-        if(ceGraphTS.video.currentTime>0) {
-            ceGraphTS.graphRuler.style('left', (ceGraphTS.video.currentTime * ceGraphTS.pixelXSeconds) + (ceGraphTS_M+ceGraphTS.outerLeft) + 'px');
+    if(ceTimeSeries.handleInitBar) clearInterval(ceTimeSeries.handleInitBar);
+    ceTimeSeries.handleBarMove = setInterval(function(){
+        if(ceTimeSeries.video.currentTime>0) {
+            ceTimeSeries.graphRuler.style('left', (ceTimeSeries.video.currentTime * ceTimeSeries.pixelXSeconds) + (ceGraphTS_M+ceTimeSeries.outerLeft) + 'px');
             displayTime();
         };
     },250);
 };
 
 var stopBar = function(){
-    if(ceGraphTS.handleBarMove) clearInterval(ceGraphTS.handleBarMove);
-    if(ceGraphTS.handleInitBar) clearInterval(ceGraphTS.handleInitBar);
+    if(ceTimeSeries.handleBarMove) clearInterval(ceTimeSeries.handleBarMove);
+    if(ceTimeSeries.handleInitBar) clearInterval(ceTimeSeries.handleInitBar);
 };
 
 var initBar = function(){
-    ceGraphTS.handleInitBar = setInterval(function(){
-        if(ceGraphTS.width){
+    ceTimeSeries.handleInitBar = setInterval(function(){
+        if(ceTimeSeries.width){
             moveBar();
         }
     },150);
@@ -262,34 +259,34 @@ var initBar = function(){
 
 var videoPlayback = function(action){
     if(!action || action == 'play'){
-        ceGraphTS.video.play();
+        ceTimeSeries.video.play();
     }
     if(action == 'pause'){
-        if(!ceGraphTS.video.paused) ceGraphTS.video.pause();
+        if(!ceTimeSeries.video.paused) ceTimeSeries.video.pause();
     }
     if(action == 'reset'){
-        if(!ceGraphTS.video.paused) ceGraphTS.video.pause();
-        ceGraphTS.video.currentTime = 0;
+        if(!ceTimeSeries.video.paused) ceTimeSeries.video.pause();
+        ceTimeSeries.video.currentTime = 0;
     }
 };
 
 var displayTime = function(time){
     var t = time? time : videoGetTime();
 
-    document.getElementById(ceGraphTS.timeId).innerHTML = t.toFixed(2)+'s';
+    document.getElementById(ceTimeSeries.timeId).innerHTML = t.toFixed(2)+'s';
 };
 
 var videoSetTime = function(time){
     time ? '' : time = 0;
-    ceGraphTS.video.currentTime = (time);
+    ceTimeSeries.video.currentTime = (time);
 };
 var videoGetTime = function(){
-    return ceGraphTS.video.currentTime ? (ceGraphTS.video.currentTime) : 0;
+    return ceTimeSeries.video.currentTime ? (ceTimeSeries.video.currentTime) : 0;
 };
 
 var videoInit = function(videoId){
-    ceGraphTS.videoId = videoId;
-    ceGraphTS.video = document.getElementById(videoId);
+    ceTimeSeries.videoId = videoId;
+    ceTimeSeries.video = document.getElementById(videoId);
 }
 var getMetricName = function(name,type){
     if(type=='kanako') {
@@ -324,184 +321,210 @@ function normalise(arr){
 
 
 var saveBoxDimension = function(){
-    if(ceGraphTS.width<=0) {
+    if(ceTimeSeries.width<=0) {
         /*
-        console.log('d3.select("#" + ceGraphTS.divId + " svg").node().getBoundingClientRect().width');
-        console.log(d3.select("#" + ceGraphTS.divId + " svg").node().getBoundingClientRect().width);
-        console.log('d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().width');
-        console.log(d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().width);
-        console.log('$("#" + ceGraphTS.divId).width()');
-        console.log($("#" + ceGraphTS.divId).width());
+        console.log('d3.select("#" + ceTimeSeries.divId + " svg").node().getBoundingClientRect().width');
+        console.log(d3.select("#" + ceTimeSeries.divId + " svg").node().getBoundingClientRect().width);
+        console.log('d3.select("#" + ceTimeSeries.divId + " svg g.focus").node().getBoundingClientRect().width');
+        console.log(d3.select("#" + ceTimeSeries.divId + " svg g.focus").node().getBoundingClientRect().width);
+        console.log('$("#" + ceTimeSeries.divId).width()');
+        console.log($("#" + ceTimeSeries.divId).width());
         */
-        ceGraphTS.width = d3.select("#" + ceGraphTS.divId + " svg").node().getBoundingClientRect().width;
-        ceGraphTS.left = ceGraphTS.width - ceGraphTS.margin.m[1];
-        ceGraphTS.outerLeft = $("#" + ceGraphTS.divId).offset().left;
-        ceGraphTS.top =  ceGraphTS.margin.m[0];
-        ceGraphTS.outerTop = $("#" + ceGraphTS.divId).offset().top;
-        ceGraphTS.height = d3.select("#" + ceGraphTS.divId + " svg g.focus").node().getBoundingClientRect().height;
-        ceGraphTS.pixelXSeconds = ceGraphTS.xScale(1);
+        ceTimeSeries.width = d3.select("#" + ceTimeSeries.divId + " svg").node().getBoundingClientRect().width;
+        ceTimeSeries.left = ceTimeSeries.width - ceTimeSeries.margin.m[1];
+        ceTimeSeries.outerLeft = $("#" + ceTimeSeries.divId).offset().left;
+        ceTimeSeries.top =  ceTimeSeries.margin.m[0];
+        ceTimeSeries.outerTop = $("#" + ceTimeSeries.divId).offset().top;
+        ceTimeSeries.height = d3.select("#" + ceTimeSeries.divId + " svg g.focus").node().getBoundingClientRect().height;
+        ceTimeSeries.pixelXSeconds = ceTimeSeries.xScale(1);
 
     }
 };
 
-function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId, engine) {
-    engine ? ceGraphTS.engine =   engine : ceGraphTS.engine = 'kanako';
+ceTimeSeries.getCsv = function (csvUrl) {
+    var timeList = [];
+    //TODO ceTimeSeries.time = dataFull[0].data[dataFull[0].data.length - 1];
+    //TODO ceTimeSeries.timeLength = dataFull[0].data.length;
+
+    var timeList = [];
+    d3.csv(csvUrl, function(d,i) {
+        var n =  d.Timestamp;
+        delete d.Timestamp;
+        var d = d;
+        if(i==0){
+            timeList = Object.keys(d);
+        }
+        return {
+            name : n,
+            data : Object.keys(d).map(function (key) {return d[key]})
+        };
+    }, function(data) {
+        data.unshift({name:'Timestamp', data:timeList});
+        data.pop();
+        ceTimeSeries.time = data[0].data[data[0].data.length - 1];
+        ceTimeSeries.timeLength = data[0].data.length;
+        ceTimeSeries.dataFull = data;
+        ceTimeSeries.d3Drawn();
+    });
+
+};
+
+
+ceTimeSeries.showGraph = function(dataFull, graphType, initState, divId, emotionsOnly, videoId, engine) {
+    ceTimeSeries.dataFull = dataFull;
+    ceTimeSeries.graphType = graphType;
+    ceTimeSeries.initState = ceTimeSeries;
+
+    engine ? ceTimeSeries.engine =   engine : ceTimeSeries.engine = 'kanako';
     gid = divId.split('_');
-    ceGraphTS.gid = gid = (gid[1])?  gid[1] : 0;
-    ceGraphTS.divId = divId;
-    document.getElementById(ceGraphTS.divId).addEventListener('cegraphts_focus_ready', saveBoxDimension, false);
-    videoId = videoId ? document.getElementById(videoId) : false;
-    d3Legend();
+    ceTimeSeries.gid = gid = (gid[1])?  gid[1] : 0;
+    ceTimeSeries.divId = divId;
+    document.getElementById(ceTimeSeries.divId).addEventListener('cegraphts_focus_ready', saveBoxDimension, false);
+    if(videoId) {
+        ceTimeSeries.videoId = document.getElementById(videoId);
+    }
+    ceTimeSeries.d3Legend();
     var positiveMood = [];
     var negativeMood = [];
     var engagement = [];
     if(emotionsOnly==undefined) emotionsOnly= false;
-    if(!dataFull || !dataFull[0] || !dataFull[0].data) return false;
-    ceGraphTS.time = dataFull[0].data[dataFull[0].data.length-1];
-    ceGraphTS.timeLength = dataFull[0].data.length;
-    for( var i = 0; i < dataFull[0].data.length; i++){
-        if(dataFull[1].data[i]==null || emotionsOnly==true){
-            positiveMood.push(null);
-            negativeMood.push(null);
-            engagement.push(null);
+    if(dataFull instanceof Array){
+        if (!dataFull || !dataFull[0] || !dataFull[0].data) return false;
+        ceTimeSeries.time = dataFull[0].data[dataFull[0].data.length - 1];
+        ceTimeSeries.timeLength = dataFull[0].data.length;
+        for (var i = 0; i < dataFull[0].data.length; i++) {
+            if (dataFull[1].data[i] == null || emotionsOnly == true) {
+                positiveMood.push(null);
+                negativeMood.push(null);
+                engagement.push(null);
+            }
+            else {
+                positiveMood.push(
+                    (dataFull[1].data[i] + dataFull[2].data[i]) / 2.0);
+                negativeMood.push(
+                    (dataFull[3].data[i] + dataFull[4].data[i] + dataFull[5].data[i] + dataFull[6].data[i]) / 4.0);
+                engagement.push(
+                    (dataFull[1].data[i] + dataFull[2].data[i] + dataFull[3].data[i] + dataFull[4].data[i] + dataFull[5].data[i] + dataFull[6].data[i]) / 6.0);
+            }
         }
-        else {
-            positiveMood.push(
-                (dataFull[1].data[i]+dataFull[2].data[i])/2.0);
-            negativeMood.push(
-                (dataFull[3].data[i]+dataFull[4].data[i]+dataFull[5].data[i]+dataFull[6].data[i])/4.0);
-            engagement.push(
-                (dataFull[1].data[i]+dataFull[2].data[i]+dataFull[3].data[i]+dataFull[4].data[i]+dataFull[5].data[i]+dataFull[6].data[i])/6.0);
+
+
+        var reformattedArray = dataFull.map(function (obj) {
+            var rObj = {};
+            obj.data.length > ceTimeSeries.timeLength ? obj.data.splice(-(obj.data.length - ceTimeSeries.timeLength)) : '';
+            rObj["name"] = getMetricName(obj.metricName, ceTimeSeries.engine);
+            rObj["data"] = obj.data;
+            return rObj;
+        });
+
+        if (reformattedArray.length > ceTimeSeries.timeLength) {
+            reformattedArray.splice(-(reformattedArray.length - ceTimeSeries.timeLength));
         }
+        ceTimeSeries.dataFull = reformattedArray;
+        ceTimeSeries.d3Drawn();
+    }else{
+        ceTimeSeries.getCsv(dataFull);
     }
 
-    /*
-    positiveMood=normalise(positiveMood);
-    negativeMood=normalise(negativeMood);
-    engagement=normalise(engagement);
-    */
-    //TODO engagement
-    /*
-    dataFull = [
-        {"name": ( dataFull[0].metricName.charAt(0).toUpperCase()+dataFull[0].metricName.slice(1) ) ,"data":dataFull[0].data},
-        {"name": ( dataFull[1].metricName.charAt(0).toUpperCase()+dataFull[1].metricName.slice(1) ) ,"data":dataFull[1].data},
-        {"name": ( dataFull[2].metricName.charAt(0).toUpperCase()+dataFull[2].metricName.slice(1) ) ,"data":dataFull[2].data},
-        {"name": ( dataFull[3].metricName.charAt(0).toUpperCase()+dataFull[3].metricName.slice(1) ) ,"data":dataFull[3].data},
-        {"name": ( dataFull[4].metricName.charAt(0).toUpperCase()+dataFull[4].metricName.slice(1) ) ,"data":dataFull[4].data},
-        {"name": ( dataFull[5].metricName.charAt(0).toUpperCase()+dataFull[5].metricName.slice(1) ) ,"data":dataFull[5].data},
-        {"name": ( dataFull[6].metricName.charAt(0).toUpperCase()+dataFull[6].metricName.slice(1) ) ,"data":dataFull[6].data},
-        //{"name":"PositiveMood","data":positiveMood},
-        //{"name":"NegativeMood","data":negativeMood},
-        //{"name":"Engagement","data":engagement}
-    ];
-    */
-    var reformattedArray = dataFull.map(function(obj){
-        var rObj = {};
-        obj.data.length>ceGraphTS.timeLength?  obj.data.splice(-(obj.data.length-ceGraphTS.timeLength)):'';
-        rObj["name"] = getMetricName(obj.metricName,ceGraphTS.engine);
-        rObj["data"] = obj.data;
-        return rObj;
-    });
+};
 
-    if(reformattedArray.length>ceGraphTS.timeLength){
-        reformattedArray.splice(- (reformattedArray.length-ceGraphTS.timeLength));
-    }
-    dataFull = reformattedArray;
+ceTimeSeries.d3Drawn = function() {
 
-    /** legend g container*/
-
-    /** end legend g container */
-    if (graphType == "line") {
-
-        var init_H = ceGraphTS.init_H;// parseInt(d3.select('#'+divId).style("height").substring(0,d3.select('#'+divId).style("width").length-2)) || 500;
-        init_H = init_H>250 ? init_H : 250;
+    if (ceTimeSeries.graphType == "line") {
+        var divId = ceTimeSeries.divId;
+        var dataFull = ceTimeSeries.dataFull;
+        var init_H = ceTimeSeries.init_H;// parseInt(d3.select('#'+divId).style("height").substring(0,d3.select('#'+divId).style("width").length-2)) || 500;
+        init_H = init_H > 250 ? init_H : 250;
 
         //var m = [20, 150, 100, 20];
         //var m2 =[430, 150, 20, 20]; // margins
 
-        var m = ceGraphTS.margin.m;
-        var m2 = ceGraphTS.margin.m2;
-//        var m3 = ceGraphTS.margin.m3;
-        var yLegend = ceGraphTS.margin.yLegend;
+        var m = ceTimeSeries.margin.m;
+        var m2 = ceTimeSeries.margin.m2;
+//        var m3 = ceTimeSeries.margin.m3;
+        var yLegend = ceTimeSeries.margin.yLegend;
 
         // var w = d3.select('#'+divId).style("width") - m[1] - m[3]; // width
         //	var w = 1200 - m[1] - m[3];
-        var w = parseInt(d3.select('#'+divId).style("width").substring(0,d3.select('#'+divId).style("width").length-2)) - m[1] - m[3];
+        var w = parseInt(d3.select('#' + divId).style("width").substring(0, d3.select('#' + divId).style("width").length - 2)) - m[1] - m[3];
 
         var h = init_H - m[0] - m[2];// - m3[3];
         var h2 = init_H - m2[0] - m2[2];// - m3[3]; // height
         //var h3 = init_H - m2[0] - m3[2]; // height
 
         var normalised = false;
-        var dataRanges=[];
+        var dataRanges = [];
 
-        for (var pos = 1; pos <= dataFull.length-1; pos++){
-            dataRanges.push([d3.min(dataFull[pos].data),d3.max(dataFull[pos].data)]);
+        for (var pos = 1; pos <= dataFull.length - 1; pos++) {
+            dataRanges.push([d3.min(dataFull[pos].data), d3.max(dataFull[pos].data)]);
         }
 
-        var data = dataFull[1].data;
+        var data = ceTimeSeries.dataFull[1].data;
 
-        function timetrans(timestamp){
-            var r  =clearNumber(timestamp / 1000.0);
+        function timetrans(timestamp) {
+            var r = clearNumber(timestamp / 1000.0);
             return r;
         }
 
         var ymina = [];
         var ymaxa = [];
-        for(var pos = 1; pos <= dataFull.length-1; pos++){
+        for (var pos = 1; pos <= dataFull.length - 1; pos++) {
             ymina.push(d3.min(dataFull[pos].data));
             ymaxa.push(d3.max(dataFull[pos].data));
         }
-        if (ymina.length)
-        {
-            ymina=d3.min(ymina);
-            ymaxa=d3.max(ymaxa);
+        if (ymina.length) {
+            ymina = d3.min(ymina);
+            ymaxa = d3.max(ymaxa);
         }
-        else{
-            ymina=0;
-            ymaxa=1;
+        else {
+            ymina = 0;
+            ymaxa = 1;
         }
 
-        var x = ceGraphTS.xScale = d3.scale.linear().domain([0, timetrans(dataFull[0].data[dataFull[0].data.length-1])]).range([0, w]);
-        var x2 = d3.scale.linear().domain(x.domain()).range([0,w]);
+        var x = ceTimeSeries.xScale = d3.scale.linear().domain([0, timetrans(dataFull[0].data[dataFull[0].data.length - 1])]).range([0, w]);
+        var x2 = d3.scale.linear().domain(x.domain()).range([0, w]);
 
         var y = d3.scale.linear().domain([ymina, ymaxa]).range([h, 0]);
-        var y2= d3.scale.linear().domain(y.domain()).range([h2,0]);
+        var y2 = d3.scale.linear().domain(y.domain()).range([h2, 0]);
 
-        function adjustYDomain(){
+        function adjustYDomain() {
 
             var ymin = [];
             var ymax = [];
 
-            for(var pos = 1; pos <= dataFull.length-1; pos++){
-                if(d3.select("#"+divId+" ."+dataFull[pos].name.charAt(0).toUpperCase()+dataFull[pos].name.slice(1)+"line").attr("visibility")=="visible")
-                {
+            for (var pos = 1; pos <= dataFull.length - 1; pos++) {
+                if (d3.select("#" + divId + " ." + dataFull[pos].name.charAt(0).toUpperCase() + dataFull[pos].name.slice(1) + "line").attr("visibility") == "visible") {
                     ymin.push(d3.min(dataFull[pos].data));
                     ymax.push(d3.max(dataFull[pos].data));
                 }
             }
 
-            if (ymin.length==0){return;}
+            if (ymin.length == 0) {
+                return;
+            }
 
-            ymin=d3.min(ymin);
-            ymax=d3.max(ymax);
+            ymin = d3.min(ymin);
+            ymax = d3.max(ymax);
 
-            if(ymin==ymax){ymax+=1;}
+            if (ymin == ymax) {
+                ymax += 1;
+            }
 
-            y.domain([ymin,ymax]);
-            y2.domain([ymin,ymax])
+            y.domain([ymin, ymax]);
+            y2.domain([ymin, ymax])
 
-            for (var pos = 1; pos <= dataFull.length-1; pos++) {
-                graph.select("#path"+pos).attr("d",line(dataFull[pos].data));
-                viewer.select("#vPath"+pos).attr("d",line2(dataFull[pos].data));
+            for (var pos = 1; pos <= dataFull.length - 1; pos++) {
+                graph.select("#path" + pos).attr("d", line(dataFull[pos].data));
+                viewer.select("#vPath" + pos).attr("d", line2(dataFull[pos].data));
             }
 
         }
 
 
-
         var line = d3.svg.line()
-            .defined(function(d) { return isNumeric(clearNumber(d)); }) //To remove null entries (will look like gaps in the line)
+            .defined(function (d) {
+                return ceTimeSeries.isNumeric(clearNumber(d));
+            }) //To remove null entries (will look like gaps in the line)
             //.interpolate('cardinal')
             .x(function (d, i) {
                 return clearNumber(x(timetrans(dataFull[0].data[i])));
@@ -511,7 +534,9 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
             });
 
         var line2 = d3.svg.line()
-            .defined(function(d) { return isNumeric(clearNumber(d)); }) //To remove null entries (will look like gaps in the line)
+            .defined(function (d) {
+                return ceTimeSeries.isNumeric(clearNumber(d));
+            }) //To remove null entries (will look like gaps in the line)
             .x(function (d, i) {
                 return clearNumber(x2(timetrans(dataFull[0].data[i])));
             })
@@ -519,42 +544,47 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
                 return clearNumber(y2(d));
             });
 
-        d3.select("#"+divId+" svg").remove();
+        d3.select("#" + divId + " svg").remove();
 
-        var svgContainer = d3.select("#"+divId).append("svg:svg")
+        var svgContainer = d3.select("#" + divId).append("svg:svg")
             .attr("width", w + m[1] + m[3])
-            .attr("height", h + m[0] + m[2]+30);
+            .attr("height", h + m[0] + m[2] + 30);
 
         svgContainer.append("defs").append("clipPath")
-            .attr("id","clip")
+            .attr("id", "clip")
             .append("rect")
-            .attr("width",w)
-            .attr("height",h);
+            .attr("width", w)
+            .attr("height", h);
 
 
-        var graph =	svgContainer.append("svg:g")
-            .attr("class","focus")
+        var graph = svgContainer.append("svg:g")
+            .attr("class", "focus")
             .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
-        //ceGraphTS.width = d3.select("#"+ceGraphTS.divId+" svg g.focus").node().getBoundingClientRect().width;
+        //ceTimeSeries.width = d3.select("#"+ceTimeSeries.divId+" svg g.focus").node().getBoundingClientRect().width;
 
 
         var viewer = svgContainer.append("g")
-            .attr("class","context")
-            .attr("transform","translate(" + m2[3] + ","+m2[0]+")");
+            .attr("class", "context")
+            .attr("transform", "translate(" + m2[3] + "," + m2[0] + ")");
 
         var legendWrap = svgContainer.append("g")
-            .attr("class","legendwrap")
-            .attr("transform","translate(" + 0 + ","+ (h + m[0] + m[2])+")");;
+            .attr("class", "legendwrap")
+            .attr("transform", "translate(" + 0 + "," + (h + m[0] + m[2]) + ")");
+        ;
 
-        var xAxis = d3.svg.axis().scale(x).tickSize(-h).tickSubdivide(true).tickFormat(function(d){return d+"s"});
-        var xAxis2= d3.svg.axis().scale(x2).tickSize(-h).tickSubdivide(true).tickFormat(function(d){return d+"s"});
+        var xAxis = d3.svg.axis().scale(x).tickSize(-h).tickSubdivide(true).tickFormat(function (d) {
+            return d + "s"
+        });
+        var xAxis2 = d3.svg.axis().scale(x2).tickSize(-h).tickSubdivide(true).tickFormat(function (d) {
+            return d + "s"
+        });
 
         function brushed() {
             x.domain(brush.empty() ? x2.domain() : brush.extent());
             graph.select(".x.axis").call(xAxis);
-            for (var pos = 1; pos <= dataFull.length-1; pos++) {
-                graph.select("#path"+pos).attr("d",line(dataFull[pos].data));
+            for (var pos = 1; pos <= dataFull.length - 1; pos++) {
+                graph.select("#path" + pos).attr("d", line(dataFull[pos].data));
             }
         }
 
@@ -590,6 +620,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
                 .style("stroke-width", 5);
             this.parentNode.appendChild(this);
         }
+
         function lineMouseout() {
             d3.select(this)
                 .transition()
@@ -597,7 +628,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
                 .style("stroke-width", 1.5);
         }
 
-        for (var pos = 1; pos <= dataFull.length-1; pos++) {
+        for (var pos = 1; pos <= dataFull.length - 1; pos++) {
             var datad = dataFull[pos].data;
             var datan = dataFull[pos].name;
             try {
@@ -623,7 +654,7 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
                     .attr("visibility", "visible")
                     .attr("class", datan + "line gidline_" + gid)
 
-            }catch(e){
+            } catch (e) {
 
             }
         }
@@ -635,45 +666,33 @@ function showGraph(dataFull, graphType, initState, divId, emotionsOnly, videoId,
             .attr("y", -6)
             .attr("height", h2);
 
-        document.getElementById(ceGraphTS.divId).dispatchEvent(ceGraphTS.events.focus_ready);
+        document.getElementById(ceTimeSeries.divId).dispatchEvent(ceTimeSeries.events.focus_ready);
 
         var legend = legendWrap.append("g")
-            .attr("class","legend")
-            .attr("transform","translate(" + 25 + ",25)")
-            .style("font-size","16px")
+            .attr("class", "legend")
+            .attr("transform", "translate(" + 25 + ",25)")
+            .style("font-size", "16px")
             .call(d3.legend)
-            .on("click",adjustYDomain);
+            .on("click", adjustYDomain);
 
 
-        if(videoId){
+        if (ceTimeSeries.videoId) {
             d3VRulerInit(divId);
         }
     }
 
-    for (var pos = 1; pos <= dataFull.length-1; pos++){
+    for (var pos = 1; pos <= dataFull.length - 1; pos++) {
         var visible = true;
-        if(engine == 'kanako' && initState.indexOf(pos+2+"") == -1){
+        if (engine == 'kanako' && initState.indexOf(pos + 2 + "") == -1) {
             visible = false;
-        }else if(engine == 'suwako' && initState.indexOf(pos+24+"") == -1){
+        } else if (engine == 'suwako' && initState.indexOf(pos + 24 + "") == -1) {
             visible = false;
         }
-        if(!visible){
-            d3.selectAll("#"+divId+" ."+dataFull[pos].name+"line").attr("visibility","hidden");
-            d3.selectAll("#"+divId+" .legend"+dataFull[pos].name).style("fill","grey");
+        if (!visible) {
+            d3.selectAll("#" + divId + " ." + dataFull[pos].name + "line").attr("visibility", "hidden");
+            d3.selectAll("#" + divId + " .legend" + dataFull[pos].name).style("fill", "grey");
         }
     }
-
-
-//	var el = d3.select('#'+divId);
-//
-//	function setSize(child, parent) {
-//	    child && parent &&
-//	    child.attr('width', parent.clientWidth)
-//	         .attr('height', parent.clientHeight);
-//	}
-//	var that = this;
-
-
-}
+};
 
 
