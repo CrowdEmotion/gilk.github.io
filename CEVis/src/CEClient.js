@@ -176,7 +176,19 @@ function CEClient() {
             }
         );
 
-    }
+    };
+
+    this.readMediaVideo = function (id, cb) {
+        var ceclient = this;
+
+        javaRest.get('media/'+id+'?presignedUrl=true', null,
+            function (res){
+                if(cb) {cb(res);}
+            },function (res){
+                if(cb) {cb(res);}
+            }
+        );
+    };
 
 
 

@@ -7,8 +7,14 @@
 	var engine = 'kanako';
     var videoData = null;
     var graphID = 'graph_0';
-    isNumeric = function(n) {
+    var isNumeric = function(n) {
         return !isNaN(parseFloat(n)) && isFinite(n) && n!=null && n!=undefined && n!=NaN ;
+    };
+    var parseCSV_ID =  function(url){
+        var nameString = url;
+        var nameArray = nameString.split('/');
+        var name = nameArray[nameArray.length - 1];
+        return name.substring(0,name.indexOf('.'));
     };
 	$(document).ready(function () {
 
@@ -35,7 +41,7 @@
 						$('#form_login').slideUp('slow', function(){
 						$('#container').html(
 							'<div id="form_graph" style="display: inline">'+
-							'<input id="responseId" placeholder="response ID" type="text"  class="inline"  value="100226">'+
+							'<input id="responseId" placeholder="Insert a response ID or csv file path" type="text"  class="inline">'+
 							'<input id="checkHappy" type="checkbox"  class="inline metricCheck"  value="3" checked="checked"> Happy'+
 							'<input id="checkSurprise" type="checkbox"  class="inline metricCheck"  value="4" checked="checked"> Surprise'+
 							'<input id="checkAngry" type="checkbox"  class="inline metricCheck"  value="5" checked="checked"> Angry'+
@@ -69,16 +75,21 @@
                             }
 
                                 //TODO load media video .csv
-                                ceclient.readFacevideoInfo(respID,
-                                    function(res){
-                                        videoData = res;
-                                        if(isNumeric(respID)) {
+                                if(isNumeric(respID)) {
+                                    ceclient.readFacevideoInfo(respID,
+                                        function(res){
+                                            videoData = res;
                                             ceclient.readTimeseries(respID, engineMetric, drawGraph, true);
-                                        }else{
+                                        }
+                                    );
+                                }else{
+                                    ceclient.readMediaVideo(parseCSV_ID(respID),
+                                        function(res){
+                                            videoData = res;
                                             drawGraph(respID);
                                         }
-                                    }
-                                );
+                                    );
+                                }
 
 
 						});
@@ -104,20 +115,21 @@
 			var metricIds = $('input:checkbox:checked.metricCheck').map(function () {
 				return this.value;
 			}).get();
-            var videoId = null
-            if(videoData && videoData.remoteLocation && window.location.search.indexOf('video=true')>-1){
+            var videoId = null;
+            var videoPath = videoData.remoteLocation ? videoData.remoteLocation: videoData.presignedUrl;
+            if(videoData && videoPath && window.location.search.indexOf('video=true')>-1){
                 $('#video_wrapper').html(' ' +
                     '<div id="timing"></div>'+
                     '<button id="playpause" class="cmdbutton" >Play/Pause</button>'+
                     '<button id="reset" class="cmdbutton" >Reset</button>'+
                     '<video id="facevideo" width="420">'+
-                    '<source src="'+videoData.remoteLocation+'" type="video/mp4">'+
+                    '<source src="'+videoPath+'" type="video/mp4">'+
                     'Your browser does not support HTML5 video.'+
                     '</video>');
                 $('#playpause').on('click',playPause);
                 $('#reset').on('click',reset);
                 videoId = 'facevideo';
-                videoInit(videoId);
+                ceTimeSeries.videoInit(videoId);
             }
 			d3.select("#graph").html("");
             d3.select('#resEmo_0 svg').html("");
@@ -136,18 +148,18 @@
             var myVideo = document.getElementById("facevideo");
             if (myVideo.paused){
                 myVideo.play();
-                moveBarByVideo('play');
+                ceTimeSeries.moveBarByVideo('play');
             }
             else {
                 myVideo.pause();
-                moveBarByVideo('pause');
+                ceTimeSeries.moveBarByVideo('pause');
             }
         };
         function reset (){
             var myVideo = document.getElementById("facevideo");
             myVideo.pause()
             myVideo.currentTime = 0;
-            moveBarByVideo('reset');
+            ceTimeSeries.moveBarByVideo('reset');
         };
 
     });

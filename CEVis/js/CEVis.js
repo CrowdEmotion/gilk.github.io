@@ -169,7 +169,7 @@ var d3VRulerInit = function (graphID, videoTag){
     d3.select('#'+graphID+'').on('mousemove', function() {
         if(isInsideFocus()) {
             if(!ceTimeSeries.haveClicked) {
-                moveBarByVideo('pause');
+                ceTimeSeries.moveBarByVideo('pause');
                 videoPlayback('pause');
                 d3VRulerDrawByEvt();
                 moveTime();
@@ -209,13 +209,13 @@ var moveVideoByBar = function(x_pos){
     var xpos = ceTimeSeries.isNumeric(x_pos) ? x_pos : d3.event.pageX;
     //var left = ceTimeSeries.graphRuler.style('left');
     videoSetTime(getPos(xpos));
-    moveBarByVideo('play');
+    ceTimeSeries.moveBarByVideo('play');
     videoPlayback('play');
     deleteInterval(ceTimeSeries.handleTimeHtml);
     deleteInterval(ceTimeSeries.handleMovieTime);
 };
 
-var moveBarByVideo = function (action){
+ceTimeSeries.moveBarByVideo = function (action){
     action? '': action='play';
     ceTimeSeries.handleInitBar = null;
     if(action == 'pause' ||  action == 'stop' ){
@@ -284,7 +284,7 @@ var videoGetTime = function(){
     return ceTimeSeries.video.currentTime ? (ceTimeSeries.video.currentTime) : 0;
 };
 
-var videoInit = function(videoId){
+ceTimeSeries.videoInit = function(videoId){
     ceTimeSeries.videoId = videoId;
     ceTimeSeries.video = document.getElementById(videoId);
 }
