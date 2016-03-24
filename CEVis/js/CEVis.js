@@ -7,7 +7,7 @@
 var ceGraphTS_H = 350;
 var ceGraphTS_M = 20;
 
-var ceTimeSeries = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, video: null, divId:null,time:0,
+var ceTimeSeries = {engine: 'kanako',gid:0,graphRuler:null, videoId: null, video: null, divId:null,time:0, videoType:null,
     timeId: 'timing', width:0,height:0, left:0, outerLeft: 0, right:0, top:0, outerTop: 0,events: {focus_ready:null},handleBarMove:null, handleMovieTime:null, handleInitBar:null, handleTimeHtml: null,
         init_H: ceGraphTS_H, pixelXSeconds: 0, haveClicked: false, margin:{
         m: [ceGraphTS_H*(20.0/500.0), ceGraphTS_M, ceGraphTS_H*(100.0/500.0), ceGraphTS_M],
@@ -163,7 +163,7 @@ var isInsideFocus = function(pos,type){
     console.log('isInsideFocus false');
     return false;
 };
-var d3VRulerInit = function (graphID, videoTag){
+var d3VRulerInit = function (graphID){
     d3VRulerDrawByEvt(ceGraphTS_M+ceTimeSeries.outerLeft);
 
     d3.select('#'+graphID+'').on('mousemove', function() {
@@ -202,7 +202,7 @@ var moveVideo = function(){
 };
 var deleteInterval =  function(interval){
     if(interval) clearInterval(interval);
-}
+};
 
 var moveVideoByBar = function(x_pos){
 
@@ -237,8 +237,8 @@ var resetBar = function(){
 var moveBar = function(){
     if(ceTimeSeries.handleInitBar) clearInterval(ceTimeSeries.handleInitBar);
     ceTimeSeries.handleBarMove = setInterval(function(){
-        if(ceTimeSeries.video.currentTime>0) {
-            ceTimeSeries.graphRuler.style('left', (ceTimeSeries.video.currentTime * ceTimeSeries.pixelXSeconds) + (ceGraphTS_M+ceTimeSeries.outerLeft) + 'px');
+        if(videoGetTime()>0) {
+            ceTimeSeries.graphRuler.style('left', (videoGetTime() * ceTimeSeries.pixelXSeconds) + (ceGraphTS_M+ceTimeSeries.outerLeft) + 'px');
             displayTime();
         };
     },250);
@@ -258,15 +258,27 @@ var initBar = function(){
 };
 
 var videoPlayback = function(action){
-    if(!action || action == 'play'){
-        ceTimeSeries.video.play();
-    }
-    if(action == 'pause'){
-        if(!ceTimeSeries.video.paused) ceTimeSeries.video.pause();
-    }
-    if(action == 'reset'){
-        if(!ceTimeSeries.video.paused) ceTimeSeries.video.pause();
-        ceTimeSeries.video.currentTime = 0;
+    if(ceTimeSeries.videoType=='custom') {
+        if (!action || action == 'play') {
+            ceTimeSeries.video.play();
+        }
+        if (action == 'pause') {
+            if (!ceTimeSeries.video.paused) ceTimeSeries.video.pause();
+        }
+        if (action == 'reset') {
+            if (!ceTimeSeries.video.paused) ceTimeSeries.video.pause();
+            ceTimeSeries.video.currentTime = 0;
+        }
+    }else{
+        if (!action || action == 'play') {
+            ceTimeSeries.video.playVideo();
+        }
+        if (action == 'pause') {
+             ceTimeSeries.video.pauseVideo();
+        }
+        if (action == 'reset') {
+            ceTimeSeries.video.stopVideo();
+        }
     }
 };
 
@@ -278,15 +290,33 @@ var displayTime = function(time){
 
 var videoSetTime = function(time){
     time ? '' : time = 0;
-    ceTimeSeries.video.currentTime = (time);
+    if(ceTimeSeries.videoType == 'custom') {
+        ceTimeSeries.video.currentTime = (time);
+    }else{
+        ceTimeSeries.video.seekTo(time,true);
+    }
 };
 var videoGetTime = function(){
-    return ceTimeSeries.video.currentTime ? (ceTimeSeries.video.currentTime) : 0;
+    var t = 0;
+    if(ceTimeSeries.videoType == 'yt'){
+        t = ceTimeSeries.video.getCurrentTime();
+    }else {
+        t = ceTimeSeries.video.currentTime ? (ceTimeSeries.video.currentTime) : 0;
+    }
+    //console.log(t);
+    return t;
 };
 
-ceTimeSeries.videoInit = function(videoId){
+
+ceTimeSeries.videoInit = function(videoId, ytObject){
+    ceTimeSeries.videoType = ytObject? 'yt' : 'custom';
     ceTimeSeries.videoId = videoId;
-    ceTimeSeries.video = document.getElementById(videoId);
+    if(ceTimeSeries.videoType == 'custom'){
+        ceTimeSeries.video = document.getElementById(videoId);
+    }else{
+        ceTimeSeries.video = ytObject;
+    }
+
 }
 var getMetricName = function(name,type){
     if(type=='kanako') {
@@ -322,14 +352,6 @@ function normalise(arr){
 
 var saveBoxDimension = function(){
     if(ceTimeSeries.width<=0) {
-        /*
-        console.log('d3.select("#" + ceTimeSeries.divId + " svg").node().getBoundingClientRect().width');
-        console.log(d3.select("#" + ceTimeSeries.divId + " svg").node().getBoundingClientRect().width);
-        console.log('d3.select("#" + ceTimeSeries.divId + " svg g.focus").node().getBoundingClientRect().width');
-        console.log(d3.select("#" + ceTimeSeries.divId + " svg g.focus").node().getBoundingClientRect().width);
-        console.log('$("#" + ceTimeSeries.divId).width()');
-        console.log($("#" + ceTimeSeries.divId).width());
-        */
         ceTimeSeries.width = d3.select("#" + ceTimeSeries.divId + " svg").node().getBoundingClientRect().width;
         ceTimeSeries.left = ceTimeSeries.width - ceTimeSeries.margin.m[1];
         ceTimeSeries.outerLeft = $("#" + ceTimeSeries.divId).offset().left;
@@ -342,10 +364,6 @@ var saveBoxDimension = function(){
 };
 
 ceTimeSeries.getCsv = function (csvUrl) {
-    var timeList = [];
-    //TODO ceTimeSeries.time = dataFull[0].data[dataFull[0].data.length - 1];
-    //TODO ceTimeSeries.timeLength = dataFull[0].data.length;
-
     var timeList = [];
     d3.csv(csvUrl, function(d,i) {
         var n =  d.Timestamp;
@@ -373,7 +391,7 @@ ceTimeSeries.getCsv = function (csvUrl) {
 ceTimeSeries.showGraph = function(dataFull, graphType, initState, divId, emotionsOnly, videoId, engine) {
     ceTimeSeries.dataFull = dataFull;
     ceTimeSeries.graphType = graphType;
-    ceTimeSeries.initState = ceTimeSeries;
+    ceTimeSeries.initState = initState;
 
     engine ? ceTimeSeries.engine =   engine : ceTimeSeries.engine = 'kanako';
     gid = divId.split('_');
@@ -677,15 +695,15 @@ ceTimeSeries.d3Drawn = function() {
 
 
         if (ceTimeSeries.videoId) {
-            d3VRulerInit(divId);
+            d3VRulerInit(ceTimeSeries.divId);
         }
     }
 
     for (var pos = 1; pos <= dataFull.length - 1; pos++) {
         var visible = true;
-        if (engine == 'kanako' && initState.indexOf(pos + 2 + "") == -1) {
+        if (engine == 'kanako' && ceTimeSeries.initState.indexOf(pos + 2 + "") == -1) {
             visible = false;
-        } else if (engine == 'suwako' && initState.indexOf(pos + 24 + "") == -1) {
+        } else if (engine == 'suwako' && ceTimeSeries.initState.indexOf(pos + 24 + "") == -1) {
             visible = false;
         }
         if (!visible) {
